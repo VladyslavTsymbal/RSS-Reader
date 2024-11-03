@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	
+	xmlns:georss="http://www.georss.org/georss"
+	xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+	>
+
+<channel>
+	<title>TechCrunch</title>
+	<atom:link href="https://techcrunch.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://techcrunch.com/</link>
+	<description>Startup and Technology News</description>
+	<lastBuildDate>Sat, 19 Oct 2024 20:51:40 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=6.6.2</generator>
+
+<image>
+	<url>https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32</url>
+	<title>TechCrunch</title>
+	<link>https://techcrunch.com/</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>DJI sues Department of Defense over listing as a Chinese military company</title>
+		<link>https://techcrunch.com/2024/10/19/dji-sues-department-of-defense-over-listing-as-a-chinese-military-company/</link>
+		
+		<dc:creator><![CDATA[Anthony Ha]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 20:50:46 +0000</pubDate>
+				<category><![CDATA[Government & Policy]]></category>
+		<category><![CDATA[Hardware]]></category>
+		<category><![CDATA[Robotics]]></category>
+		<category><![CDATA[DJI]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901817</guid>
+
+					<description><![CDATA[<p>Drone-maker DJI filed a lawsuit Friday against the US Department of Defense over its inclusion on a DoD list of “Chinese military companies.” A DJI spokesperson said the company filed the suit after “attempting to engage with the DoD for more than sixteen months” and deciding “it had no alternative other than to seek relief [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>What we know about the layoffs at Meta</title>
+		<link>https://techcrunch.com/2024/10/19/what-we-know-about-the-layoffs-at-meta/</link>
+		
+		<dc:creator><![CDATA[Cody Corrall]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 20:15:00 +0000</pubDate>
+				<category><![CDATA[Social]]></category>
+		<category><![CDATA[Layoffs]]></category>
+		<category><![CDATA[Week in Review]]></category>
+		<category><![CDATA[Meta]]></category>
+		<category><![CDATA[TechCrunch Week in Review]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901501</guid>
+
+					<description><![CDATA[<p>Welcome back to Week in Review. This week, we’re diving into the recent layoffs at Meta; the fallout from the battle between WordPress and WP Engine; and whether Cybertrucks are simply too big to exist in Europe. Let’s get into it. Multiple teams at Meta were hit by layoffs this week. The company confirmed the [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>I just spent my first week ever with an EV, the Chevy Equinox — here&#8217;s what it was like</title>
+		<link>https://techcrunch.com/2024/10/19/i-just-spent-my-first-week-ever-with-an-ev-the-chevy-equinox-heres-what-it-was-like/</link>
+		
+		<dc:creator><![CDATA[Matt Rosoff]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 19:30:00 +0000</pubDate>
+				<category><![CDATA[Transportation]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901218</guid>
+
+					<description><![CDATA[<p>The funnest car I ever drove was the original Tesla Roadster. This was in 2011, back when Elon Musk&#8217;s EV company was courting press instead of denigrating us, and they offered me a test drive. I took the car up I-280 — a beautiful, mostly deserted highway with perfectly banked curves that seemed designed for Silicon [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Four takeaways from Pony AI&#8217;s IPO filing</title>
+		<link>https://techcrunch.com/2024/10/19/four-takeaways-from-pony-ais-ipo-filing/</link>
+		
+		<dc:creator><![CDATA[Rebecca Bellan, Sean O'Kane]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 18:34:50 +0000</pubDate>
+				<category><![CDATA[Transportation]]></category>
+		<category><![CDATA[autonomous vehicles]]></category>
+		<category><![CDATA[avs]]></category>
+		<category><![CDATA[IPOs]]></category>
+		<category><![CDATA[Pony.ai]]></category>
+		<category><![CDATA[robotaxis]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901750</guid>
+
+					<description><![CDATA[<p>Toyota-backed autonomous vehicle company Pony AI has joined the list of Chinese firms going public on the U.S. stock market after a multi-year ban from Beijing on offshore capital raising.&#160; Zeekr, a luxury Chinese electric vehicle startup, debuted on the New York Stock Exchange in May, and WeRide, another AV startup, also hopes to file [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Penguin Random House is adding an AI warning to its books&#8217; copyright pages</title>
+		<link>https://techcrunch.com/2024/10/19/penguin-random-house-is-adding-an-ai-warning-to-its-books-copyright-pages/</link>
+		
+		<dc:creator><![CDATA[Anthony Ha]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 18:26:49 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[Media & Entertainment]]></category>
+		<category><![CDATA[In Brief]]></category>
+		<category><![CDATA[penguin random house]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901806</guid>
+
+					<description><![CDATA[<p>Penguin Random House, the trade publisher, is adding language to the copyright pages of its books to prohibit the use of those books to train AI. The Bookseller reports that new books and reprints of older titles from the publisher will now include the statement, “No part of this book may be used or reproduced [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>The WordPress vs. WP Engine drama, explained</title>
+		<link>https://techcrunch.com/2024/10/19/wordpress-vs-wp-engine-drama-explained/</link>
+		
+		<dc:creator><![CDATA[Ivan Mehta]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 18:00:00 +0000</pubDate>
+				<category><![CDATA[Social]]></category>
+		<category><![CDATA[Startups]]></category>
+		<category><![CDATA[Automattic]]></category>
+		<category><![CDATA[evergreens]]></category>
+		<category><![CDATA[matt mullenweg]]></category>
+		<category><![CDATA[WordPress]]></category>
+		<category><![CDATA[wp engine]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2886976</guid>
+
+					<description><![CDATA[<p>This story has been updated throughout with more details as the story has developed. We will continue to do so as the case and dispute are ongoing. The world of WordPress, one of the most popular technologies for creating and hosting websites, is going through a very heated controversy. The core issue is the fight [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Midjourney plans to let anyone on the web edit images with AI</title>
+		<link>https://techcrunch.com/2024/10/19/midjourney-plans-to-let-anyone-on-the-web-edit-images-with-ai/</link>
+		
+		<dc:creator><![CDATA[Kyle Wiggers]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 17:07:33 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[Media & Entertainment]]></category>
+		<category><![CDATA[Editing]]></category>
+		<category><![CDATA[Generative AI]]></category>
+		<category><![CDATA[MidJourney]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901760</guid>
+
+					<description><![CDATA[<p>Midjourney is planning to release an upgraded web tool that&#8217;ll let users edit any uploaded images from the web using Midjourney&#8217;s generative AI. The upgraded tool, which Midjourney CEO David Holtz said will be released &#8220;early next week,&#8221; will also allow users to retexture objects in images to &#8220;repaint&#8221; their colors and details according to [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Women in AI: Dr. Rebecca Portnoff is protecting children from harmful deepfakes</title>
+		<link>https://techcrunch.com/2024/10/19/women-in-ai-dr-rebecca-portnoff-is-protecting-children-from-harmful-deepfakes/</link>
+		
+		<dc:creator><![CDATA[Dominic-Madori Davis]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 17:00:00 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[ai ethics]]></category>
+		<category><![CDATA[Women in AI]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2900544</guid>
+
+					<description><![CDATA[<p>This is part of TechCrunch’s ongoing Women in AI series, which seeks to give AI-focused women academics and others their time in the spotlight. </p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>23andMe faces an uncertain future — so does your genetic data </title>
+		<link>https://techcrunch.com/2024/10/19/23andme-faces-an-uncertain-future-so-does-your-genetic-data/</link>
+		
+		<dc:creator><![CDATA[Carly Page]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 16:03:00 +0000</pubDate>
+				<category><![CDATA[Security]]></category>
+		<category><![CDATA[23andMe]]></category>
+		<category><![CDATA[privacy]]></category>
+		<category><![CDATA[cybersecurity]]></category>
+		<category><![CDATA[data breach]]></category>
+		<category><![CDATA[data security]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2900608</guid>
+
+					<description><![CDATA[<p>Financial and security chaos at the once-pioneering genetic testing firm has intensified concerns about user data. Here's how to take action.</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Match’s random video chat app Azar could be the next Chatroulette — for better or for worse</title>
+		<link>https://techcrunch.com/2024/10/19/matchs-random-video-chat-app-azar-could-be-the-next-chatroulette-for-better-or-for-worse/</link>
+		
+		<dc:creator><![CDATA[Amanda Silberling]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Apps]]></category>
+		<category><![CDATA[Social]]></category>
+		<category><![CDATA[Match]]></category>
+		<category><![CDATA[dating apps]]></category>
+		<category><![CDATA[azar]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2900858</guid>
+
+					<description><![CDATA[<p>Azar has facilitated over 100 billion video chats with its app, which randomly connects strangers around the globe. But until recently, the Seoul-based app — which shares a parent company, Match, with Tinder, Hinge, and OkCupid — hasn’t been available in the U.S. The U.S. market could be tough to crack. For millennials who grew [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Claude: Everything you need to know about Anthropic&#8217;s AI</title>
+		<link>https://techcrunch.com/2024/10/19/claude-everything-you-need-to-know-about-anthropics-ai/</link>
+		
+		<dc:creator><![CDATA[Kyle Wiggers]]></dc:creator>
+		<pubDate>Sat, 19 Oct 2024 13:00:00 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[Apps]]></category>
+		<category><![CDATA[Enterprise]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[Claude]]></category>
+		<category><![CDATA[Evergreen]]></category>
+		<category><![CDATA[Explainer]]></category>
+		<category><![CDATA[Generative AI]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2899898</guid>
+
+					<description><![CDATA[<p>Anthropic, the AI vendor second in size only to OpenAI, has a powerful family of generative AI models called Claude. These models can perform a range of tasks, from captioning images and writing emails to solving math and coding challenges. With Anthropic&#8217;s model ecosystem growing so quickly, it can be tough to keep track of [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>SpaceX wins $733M Space Force launch contract</title>
+		<link>https://techcrunch.com/2024/10/18/spacex-wins-733m-space-force-launch-contract/</link>
+		
+		<dc:creator><![CDATA[Aria Alamalhodaei]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 22:38:58 +0000</pubDate>
+				<category><![CDATA[Government & Policy]]></category>
+		<category><![CDATA[Space]]></category>
+		<category><![CDATA[defense]]></category>
+		<category><![CDATA[Space Force]]></category>
+		<category><![CDATA[SpaceX]]></category>
+		<category><![CDATA[U.S. Space Force]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901670</guid>
+
+					<description><![CDATA[<p>SpaceX was awarded an eight-launch, $733 million contract by the U.S. Space Force on Friday, as part of an ongoing program intended to foster competition among launch providers. The award includes seven launches for the Space Development Agency and one for the National Reconnaissance Office, all anticipated to use Falcon 9s and occur no earlier [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Eric Schmidt&#8217;s SandboxAQ aims for $5B valuation for its AI/quantum Google moonshot</title>
+		<link>https://techcrunch.com/2024/10/18/eric-schmidts-sandboxaq-aims-for-5b-valuation-for-its-ai-quantum-google-moonshot/</link>
+		
+		<dc:creator><![CDATA[Julie Bort]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 21:17:54 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[TC]]></category>
+		<category><![CDATA[Alphabet]]></category>
+		<category><![CDATA[Eric Schmidt]]></category>
+		<category><![CDATA[quantum encryption]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901572</guid>
+
+					<description><![CDATA[<p>SandboxAQ began as Alphabet’s moonshot AI and quantum computing and now has an impressive roster of projects.</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>This $600 Buzz Lightyear toy is the most realistic yet</title>
+		<link>https://techcrunch.com/video/this-600-buzz-lightyear-toy-is-the-most-realistic-yet/</link>
+		
+		<dc:creator><![CDATA[Yashad Kulkarni]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 20:32:57 +0000</pubDate>
+				<category><![CDATA[Hardware]]></category>
+		<category><![CDATA[Robotics]]></category>
+		<category><![CDATA[Hardware Videos]]></category>
+		<category><![CDATA[toys]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?post_type=tc_video&#038;p=2901509</guid>
+
+					<description><![CDATA[<p>Do you have $600 burning an asteroid-sized hole in your pocket? If so, the new Buzz Lightyear robot might be for you. A collaboration between Pixar and smart toy company Robosen, the new Buzz is fully loaded with more than 3,000 tiny parts, 75 microchips, and 23 servo motors. It also features what Robosen calls [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Fluid Truck files for Chapter 11 bankruptcy and pursues sale after leadership shakeup</title>
+		<link>https://techcrunch.com/2024/10/18/fluid-truck-files-for-chapter-11-bankruptcy-and-pursues-sale-after-leadership-shakeup/</link>
+		
+		<dc:creator><![CDATA[Rebecca Bellan]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 20:01:36 +0000</pubDate>
+				<category><![CDATA[Startups]]></category>
+		<category><![CDATA[Transportation]]></category>
+		<category><![CDATA[bankruptcy]]></category>
+		<category><![CDATA[Fluid Truck]]></category>
+		<category><![CDATA[logistics]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901527</guid>
+
+					<description><![CDATA[<p>Less than two months after Fluid Truck’s board ousted its sibling co-founders from their executive positions, the company has laid off 30% of its staff, filed for Chapter 11 bankruptcy protection, and found a potential buyer to take on the business, pending court approval, according to bankruptcy filings and information from a former employee.&#160; Fluid [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Acrew Capital hits five years, raises $700M</title>
+		<link>https://techcrunch.com/2024/10/18/acrew-capital-hits-five-years-raises-700m/</link>
+		
+		<dc:creator><![CDATA[Rebecca Szkutak]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 19:56:06 +0000</pubDate>
+				<category><![CDATA[Fundraising]]></category>
+		<category><![CDATA[TC]]></category>
+		<category><![CDATA[Venture]]></category>
+		<category><![CDATA[acrew capital]]></category>
+		<category><![CDATA[divvy]]></category>
+		<category><![CDATA[fundraising announcements]]></category>
+		<category><![CDATA[vc funds]]></category>
+		<category><![CDATA[venture capital]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901479</guid>
+
+					<description><![CDATA[<p>Acrew Capital has raised $700 million in fresh funds. The San Francisco-based venture capital firm announced in a blog post on Thursday that it raised $700 million to invest in companies building in data and security, healthcare, or fintech. This fundraise brings the firm&#8217;s assets under management to $1.7 billion. It&#8217;s unclear how much of [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Why changes to the block on Elon Musk&#8217;s X are driving users away</title>
+		<link>https://techcrunch.com/2024/10/18/why-changes-to-the-block-on-elon-musks-x-are-driving-users-away/</link>
+		
+		<dc:creator><![CDATA[Amanda Silberling]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 19:14:21 +0000</pubDate>
+				<category><![CDATA[Social]]></category>
+		<category><![CDATA[TC]]></category>
+		<category><![CDATA[Bluesky]]></category>
+		<category><![CDATA[Elon Musk]]></category>
+		<category><![CDATA[Twitter]]></category>
+		<category><![CDATA[X]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901359</guid>
+
+					<description><![CDATA[<p>Elon Musk&#8217;s X is planning to make a change to how the block function works, breaking from the established standards of other social media apps. When the policies around blocking change, people who have been blocked by someone will still be able to see that person&#8217;s posts, so long as they&#8217;re public. They just won&#8217;t [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Investors bet on the power of light, diamonds in the trash, and more</title>
+		<link>https://techcrunch.com/2024/10/18/investors-bet-on-the-power-of-light-diamonds-in-the-trash-and-more/</link>
+		
+		<dc:creator><![CDATA[Anna Heim]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 19:05:00 +0000</pubDate>
+				<category><![CDATA[Startups]]></category>
+		<category><![CDATA[Fundraising]]></category>
+		<category><![CDATA[venture capital]]></category>
+		<category><![CDATA[newsletter]]></category>
+		<category><![CDATA[Startups Weekly]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2900757</guid>
+
+					<description><![CDATA[<p>Welcome to Startups Weekly — your weekly recap of everything you can’t miss from the world of startups. Want it in your inbox every Friday? Sign up here. This week brought us some exciting fundraising news from around the world, and even some exits. But if you are looking for tech IPOs, you will have [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Microsoft could end up with substantial equity in the restructured, for-profit OpenAI</title>
+		<link>https://techcrunch.com/2024/10/18/microsoft-could-end-up-with-substantial-equity-in-the-restructured-for-profit-openai/</link>
+		
+		<dc:creator><![CDATA[Kyle Wiggers]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 16:07:54 +0000</pubDate>
+				<category><![CDATA[AI]]></category>
+		<category><![CDATA[Enterprise]]></category>
+		<category><![CDATA[Equity]]></category>
+		<category><![CDATA[for-profit]]></category>
+		<category><![CDATA[In Brief]]></category>
+		<category><![CDATA[Microsoft]]></category>
+		<category><![CDATA[nonprofit]]></category>
+		<category><![CDATA[OpenAI]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901226</guid>
+
+					<description><![CDATA[<p>How much equity in OpenAI will Microsoft get once the former becomes a for-profit company? That&#8217;s the multibillion-dollar question — one the two parties are racing to answer ahead of a two-year deadline. The Wall Street Journal reports that both Microsoft and OpenAI have hired investment banks to negotiate Microsoft&#8217;s equity — which could be [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>WP Engine files an injunction to get its WordPress.org access back</title>
+		<link>https://techcrunch.com/2024/10/18/wp-engine-files-an-injuction-to-get-its-wordpress-org-access-back/</link>
+		
+		<dc:creator><![CDATA[Ivan Mehta]]></dc:creator>
+		<pubDate>Fri, 18 Oct 2024 15:19:49 +0000</pubDate>
+				<category><![CDATA[Commerce]]></category>
+		<category><![CDATA[Media & Entertainment]]></category>
+		<category><![CDATA[matt mullenweg]]></category>
+		<category><![CDATA[WordPress]]></category>
+		<category><![CDATA[Wordpress.org]]></category>
+		<category><![CDATA[wp engine]]></category>
+		<guid isPermaLink="false">https://techcrunch.com/?p=2901210</guid>
+
+					<description><![CDATA[<p>Web hosting provider WP Engine has filed an injunction in a court in Northern California, asking it to intervene and restore its access to the WordPress.org open source repository. After WP Engine filed a lawsuit against WordPress co-creator Matt Mullenweg and Automattic last month, Mullenweg — who also owns WordPress.org — blocked the company&#8217;s access [&#8230;]</p>
+<p>© 2024 TechCrunch. All rights reserved. For personal use only.</p>
+]]></description>
+		
+		
+		
+			</item>
+	</channel>
+</rss>
