@@ -3,93 +3,108 @@
 #include <openssl/bio.h> /* BasicInput/Output streams */
 #include <openssl/err.h> /* errors */
 #include <openssl/ssl.h> /* core library */
-#include <string>
 
-constexpr size_t BUFF_SIZE = 1024;
+#include <sys/socket.h>
+#include <sys/types.h>
 
-void reportAndExit(const char* msg)
-{
-  perror(msg);
-  ERR_print_errors_fp(stderr);
-  exit(-1);
-}
+// constexpr size_t BUFF_SIZE = 1024;
 
-void initSSL()
-{
-  SSL_load_error_strings();
-  SSL_library_init();
-}
+// void
+// reportAndExit(const char* msg)
+// {
+//     perror(msg);
+//     ERR_print_errors_fp(stderr);
+//     exit(-1);
+// }
 
-void cleanUpSSL(SSL_CTX* ctx, BIO* bio) {
-  SSL_CTX_free(ctx);
-  BIO_free_all(bio);
-}
+// void
+// initSSL()
+// {
+//     SSL_load_error_strings();
+//     SSL_library_init();
+// }
 
-void secureConnect(const char* hostname) {
-  char name[BUFF_SIZE];
-  char request[BUFF_SIZE];
-  char response[BUFF_SIZE];
+// void
+// cleanUpSSL(SSL_CTX* ctx, BIO* bio)
+// {
+//     SSL_CTX_free(ctx);
+//     BIO_free_all(bio);
+// }
 
-  const SSL_METHOD* method = TLS_client_method();
-  if (NULL == method) reportAndExit("TLS_client_method...");
+// void
+// secureConnect(const char* hostname)
+// {
+//     char name[BUFF_SIZE];
+//     char request[BUFF_SIZE];
+//     char response[BUFF_SIZE];
 
-  SSL_CTX* ctx = SSL_CTX_new(method);
-  if (NULL == ctx) reportAndExit("SSL_CTX_new...");
+//     const SSL_METHOD* method = TLS_client_method();
+//     if (NULL == method)
+//         reportAndExit("TLS_client_method...");
 
-  BIO* bio = BIO_new_ssl_connect(ctx);
-  if (NULL == bio) reportAndExit("BIO_new_ssl_connect...");
+//     SSL_CTX* ctx = SSL_CTX_new(method);
+//     if (NULL == ctx)
+//         reportAndExit("SSL_CTX_new...");
 
-  SSL* ssl = NULL;
+//     BIO* bio = BIO_new_ssl_connect(ctx);
+//     if (NULL == bio)
+//         reportAndExit("BIO_new_ssl_connect...");
 
-  /* link bio channel, SSL session, and server endpoint */
+//     SSL* ssl = NULL;
 
-  sprintf(name, "%s:%s", hostname, "https");
-  BIO_get_ssl(bio, &ssl); /* session */
-  SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* robustness */
-  BIO_set_conn_hostname(bio, name); /* prepare to connect */
+//     /* link bio channel, SSL session, and server endpoint */
 
-  /* try to connect */
-  if (BIO_do_connect(bio) <= 0) {
-    cleanUpSSL(ctx, bio);
-    reportAndExit("BIO_do_connect...");
-  }
+//     sprintf(name, "%s:%s", hostname, "https");
+//     BIO_get_ssl(bio, &ssl);                 /* session */
+//     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY); /* robustness */
+//     BIO_set_conn_hostname(bio, name);       /* prepare to connect */
 
-  /* verify truststore, check cert */
-  if (!SSL_CTX_load_verify_locations(ctx,
-                                      "/etc/ssl/certs/ca-certificates.crt", /* truststore */
-                                      "/etc/ssl/certs/")) /* more truststore */
-    reportAndExit("SSL_CTX_load_verify_locations...");
+//     /* try to connect */
+//     if (BIO_do_connect(bio) <= 0)
+//     {
+//         cleanUpSSL(ctx, bio);
+//         reportAndExit("BIO_do_connect...");
+//     }
 
-  long verify_flag = SSL_get_verify_result(ssl);
-  if (verify_flag != X509_V_OK)
-    fprintf(stderr,
-            "##### Certificate verification error (%i) but continuing...\n",
-            (int) verify_flag);
+//     /* verify truststore, check cert */
+//     if (!SSL_CTX_load_verify_locations(
+//                 ctx,
+//                 "/etc/ssl/certs/ca-certificates.crt", /* truststore */
+//                 "/etc/ssl/certs/"))                   /* more truststore */
+//         reportAndExit("SSL_CTX_load_verify_locations...");
 
-  /* now fetch sample data */
-  sprintf(request,
-          "GET /feed/ HTTP/1.1\x0D\x0AHost: %s\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A",
-          hostname);
-  BIO_puts(bio, request);
+//     long verify_flag = SSL_get_verify_result(ssl);
+//     if (verify_flag != X509_V_OK)
+//         fprintf(stderr,
+//                 "##### Certificate verification error (%i) but continuing...\n",
+//                 (int) verify_flag);
 
-  /* read HTTP response from server and print to stdout */
-  while (true) {
-    memset(response, '\0', sizeof(response));
-    int n = BIO_read(bio, response, BUFF_SIZE);
+//     /* now fetch sample data */
+//     sprintf(request,
+//             "GET /feed/ HTTP/1.1\x0D\x0AHost: %s\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A",
+//             hostname);
+//     BIO_puts(bio, request);
 
-    if (n <= 0) break; /* 0 is end-of-stream, < 0 is an error */
-    puts(response);
-  }
+//     /* read HTTP response from server and print to stdout */
+//     while (true)
+//     {
+//         memset(response, '\0', sizeof(response));
+//         int n = BIO_read(bio, response, BUFF_SIZE);
 
-  cleanUpSSL(ctx, bio);
-}
+//         if (n <= 0)
+//             break; /* 0 is end-of-stream, < 0 is an error */
+//         puts(response);
+//     }
 
-int main() {
-  initSSL();
+//     cleanUpSSL(ctx, bio);
+// }
 
-  const char* hostname = "techcrunch.com";
-  fprintf(stderr, "Trying an HTTPS connection to %s...\n", hostname);
-  secureConnect(hostname);
+// int main() {
+//   initSSL();
 
-  return 0;
-}
+//   const char* hostname = "techcrunch.com";
+//   fprintf(stderr, "Trying an HTTPS connection to %s...\n", hostname);
+//   secureConnect(hostname);
+
+//   return 0;
+// }
