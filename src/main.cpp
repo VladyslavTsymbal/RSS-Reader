@@ -13,7 +13,7 @@ main()
     if (!connection)
     {
         std::cerr << "Failed to create connection.\n";
-        exit(1);
+        return 1;
     }
 
     HttpRequest request = HttpRequestBuilder()
@@ -30,7 +30,7 @@ main()
 
     std::cout << response->getData() << std::endl;
 
-    http_client.closeConnection(*connection);
+    connection->closeConnection();
 
     return 0;
 }

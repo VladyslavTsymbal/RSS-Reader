@@ -1,19 +1,9 @@
 #include "utils/NetworkUtils.hpp"
-#include "utils/StatusCode.hpp"
-
-#include <arpa/inet.h>
-#include <cstdio>
-#include <cstdlib>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <cstring>
 
 namespace utils::network {
 
 int
-createSocket(const addrinfo* addr)
+NetworkUtils::createSocket(const addrinfo* addr)
 {
     int socket_fd = -1;
 
@@ -31,7 +21,7 @@ createSocket(const addrinfo* addr)
 }
 
 void
-closeSocket(const int socket)
+NetworkUtils::closeSocket(const int socket)
 {
     if (socket >= 0)
     {
@@ -40,7 +30,7 @@ closeSocket(const int socket)
 }
 
 StatusCode
-connectSocket(const int socket, const addrinfo* info)
+NetworkUtils::connectSocket(const int socket, const addrinfo* info)
 {
     for (auto it = info; it != nullptr; it = it->ai_next)
     {
@@ -54,7 +44,7 @@ connectSocket(const int socket, const addrinfo* info)
 }
 
 std::pair<AddrInfoPtr, int>
-getAddrInfo(const std::string& ip, const std::string& port, const addrinfo* hints)
+NetworkUtils::getAddrInfo(const std::string& ip, const std::string& port, const addrinfo* hints)
 {
     int status = 0;
     addrinfo* result;
@@ -65,40 +55,6 @@ getAddrInfo(const std::string& ip, const std::string& port, const addrinfo* hint
     }
 
     return std::make_pair(AddrInfoPtr(result, freeaddrinfo), status);
-}
-
-// HttpRequestBuilder
-
-AddrInfoBuilder::AddrInfoBuilder()
-{
-    std::memset(&m_addrinfo, 0, sizeof(m_addrinfo));
-}
-
-AddrInfoBuilder&
-AddrInfoBuilder::setProtocolFamily(AddrInfoBuilder::ProtocolFamily family)
-{
-    m_addrinfo.ai_family = static_cast<int>(family);
-    return *this;
-}
-
-AddrInfoBuilder&
-AddrInfoBuilder::setSockType(AddrInfoBuilder::SockType sock_type)
-{
-    m_addrinfo.ai_socktype = static_cast<int>(sock_type);
-    return *this;
-}
-
-AddrInfoBuilder&
-AddrInfoBuilder::setFlags(const int flags)
-{
-    m_addrinfo.ai_flags = flags;
-    return *this;
-}
-
-addrinfo
-AddrInfoBuilder::build()
-{
-    return m_addrinfo;
 }
 
 } // namespace utils::network

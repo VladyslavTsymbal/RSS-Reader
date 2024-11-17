@@ -1,50 +1,36 @@
 #pragma once
 
+#include "http/IHttpClient.hpp"
 #include "http/HttpResponse.hpp"
-#include "http/HttpRequest.hpp"
+#include "utils/NetworkUtils.hpp"
 #include "utils/StatusCode.hpp"
-
-#include <string>
-#include <optional>
 
 namespace http {
 
-class HttpRequest;
+using utils::network::INetworkUtils;
+using utils::network::NetworkUtils;
 
-class HttpClient
+class HttpRequest;
+class HttpConnection;
+
+class HttpClient : public IHttpClient
 {
 public:
-    class HttpConnection
-    {
-        friend class HttpClient;
+    HttpClient() = default;
+    HttpClient(std::shared_ptr<INetworkUtils> network_utils);
 
-    public:
-        ~HttpConnection();
+    std::unique_ptr<IHttpConnection>
+    createConnection(std::string ip, const unsigned int port) override;
 
-        HttpConnection(HttpConnection&&) = default;
-        HttpConnection&
-        operator=(HttpConnection&&) = default;
+    void
+    closeConnection(IHttpConnection& connection) override;
 
-        HttpConnection(const HttpConnection&) = delete;
-        HttpConnection&
-        operator=(const HttpConnection&) = delete;
-
-    private:
-        HttpConnection(std::string ip, const unsigned int port);
-
-        bool
-        isClosed() const;
-
-    private:
-        std::string m_ip_address;
-        unsigned int m_port;
-        int m_sock_fd{-1};
-        bool m_is_closed{false};
-    };
+    std::optional<HttpResponse>
+    getResponse(const IHttpConnection& connection, const HttpRequest& request) override;
 
 protected:
     utils::network::StatusCode
-    sendRequest(const HttpConnection& connection, const HttpRequest& request);
+    sendRequest(const IHttpConnection& connection, const HttpRequest& request);
 
     virtual utils::network::StatusCode
     sendRequestImpl(const int socket_fd, const std::string& request);
@@ -55,21 +41,11 @@ protected:
     virtual std::stringstream
     getResponseImpl(const int socket_fd);
 
-    virtual std::optional<HttpConnection>
+    virtual std::unique_ptr<HttpConnection>
     createConnectionImpl(std::string ip, const unsigned int port);
 
-public:
-    std::optional<HttpConnection>
-    createConnection(std::string ip, const unsigned int port);
-
-    bool
-    isConnectionClosed(const HttpConnection& connection) const;
-
-    void
-    closeConnection(HttpConnection& connection);
-
-    std::optional<HttpResponse>
-    getResponse(const HttpConnection& connection, const HttpRequest& request);
+protected:
+    std::shared_ptr<INetworkUtils> m_network_utils = std::shared_ptr<NetworkUtils>();
 };
 
 } // namespace http

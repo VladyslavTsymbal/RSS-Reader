@@ -5,7 +5,9 @@ file (GLOB_RECURSE _TEST_SRCS ${TEST_DIR}/*.cpp)
 set (TEST_SRCS ${_TEST_SRCS}
                src/http/HttpClient.cpp
                src/http/HttpRequest.cpp
-               src/utils/NetworkUtils.cpp)
+               src/http/HttpConnection.cpp
+               src/utils/NetworkUtils.cpp
+               src/utils/AddrInfoBuilder.cpp)
 
 add_executable (
   rss-reader-tests
@@ -13,6 +15,7 @@ add_executable (
 )
 
 target_include_directories (rss-reader-tests PRIVATE include)
+target_include_directories (rss-reader-tests PRIVATE tests/include)
 target_link_libraries (
   rss-reader-tests
   GTest::gmock_main

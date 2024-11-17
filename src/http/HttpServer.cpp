@@ -17,7 +17,7 @@ HttpServer::HttpServer(std::string port)
 
 HttpServer::~HttpServer()
 {
-    utils::network::closeSocket(m_sock_fd);
+    // utils::network::closeSocket(m_sock_fd);
 }
 
 void
