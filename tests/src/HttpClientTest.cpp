@@ -1,16 +1,18 @@
 #include "MockHttpClient.hpp"
 #include "MockNetworkUtils.hpp"
 
-#include <memory>
+#include <gmock/gmock.h>
 
 namespace {
 
 using namespace testing;
 using namespace http;
+using utils::network::AddrInfoPtr;
 
 constexpr std::string TEST_IP = "www.example.com";
 constexpr unsigned int TEST_PORT = 8080;
 constexpr int TEST_SOCK_FD = 3;
+constexpr int VALID_SOCKET_FD = 10;
 
 struct HttpClientTest : public Test
 {
@@ -25,20 +27,57 @@ struct HttpClientTest : public Test
     std::shared_ptr<StrictMock<MockNetworkUtils>> network_utils;
 };
 
-TEST_F(HttpClientTest, when_create_connection_is_failed_then_nullptr_is_returned)
+TEST_F(HttpClientTest, when_addrinfo_returns_nullptr_then_connection_is_nullptr)
 {
-    EXPECT_CALL(*http_client, createConnectionImpl(_, _)).WillOnce(ReturnNull());
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _))
+            .WillOnce(Return(std::make_pair<AddrInfoPtr, int>(nullptr, EAI_FAIL)));
+
     const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
     ASSERT_EQ(connection, nullptr);
 }
 
-TEST_F(HttpClientTest, when_connection_created_successfully_then_it_shouldnot_be_closed)
+TEST_F(HttpClientTest, when_createSocket_fails_then_connection_is_nullptr)
 {
-    EXPECT_CALL(*http_client, createConnectionImpl(_, _))
-            .WillOnce(Return(
-                    std::move(std::make_unique<HttpConnection>(TEST_IP, TEST_PORT, TEST_SOCK_FD))));
+    auto addr_info = std::make_pair<AddrInfoPtr, int>(std::make_unique<addrinfo>(), 0);
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
+    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(-1));
 
-    const auto connection = http_client->createConnection("www.example.com", 8080);
+    const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
+    ASSERT_EQ(connection, nullptr);
+}
+
+TEST_F(HttpClientTest, when_connectSocket_fails_then_connection_is_nullptr)
+{
+    auto addr_info = std::make_pair<AddrInfoPtr, int>(std::make_unique<addrinfo>(), 0);
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
+    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(VALID_SOCKET_FD));
+    EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::FAIL));
+    EXPECT_CALL(*network_utils, closeSocket(_));
+
+    const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
+    ASSERT_EQ(connection, nullptr);
+}
+
+TEST_F(HttpClientTest, when_connectSocket_is_succeed_then_valid_connection_returned)
+{
+    auto addr_info = std::make_pair<AddrInfoPtr, int>(std::make_unique<addrinfo>(), 0);
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
+    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(VALID_SOCKET_FD));
+    EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::OK));
+
+    const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
+    ASSERT_NE(connection, nullptr);
+    EXPECT_FALSE(connection->isClosed());
+}
+
+TEST_F(HttpClientTest, when_http_client_closes_connection_then_connection_is_closed)
+{
+    auto addr_info = std::make_pair<AddrInfoPtr, int>(std::make_unique<addrinfo>(), 0);
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
+    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(VALID_SOCKET_FD));
+    EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::OK));
+
+    const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
     ASSERT_NE(connection, nullptr);
     EXPECT_FALSE(connection->isClosed());
 
@@ -47,23 +86,25 @@ TEST_F(HttpClientTest, when_connection_created_successfully_then_it_shouldnot_be
     EXPECT_TRUE(connection->isClosed());
 }
 
-TEST_F(HttpClientTest, when_2)
+TEST_F(HttpClientTest,
+       when_connection_is_repeateadly_closed_by_client_then_close_socket_called_once)
 {
-    // std::string ip;
-    // unsigned int port;
+    auto addr_info = std::make_pair<AddrInfoPtr, int>(std::make_unique<addrinfo>(), 0);
+    EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
 
-    // EXPECT_CALL(*http_client, createConnectionImpl(_, _))
-    //         .WillOnce(
-    //                 DoAll(SaveArg<0>(&ip),
-    //                       SaveArg<1>(&port),
-    //                       Return(std::make_shared<HttpConnection>("1", 1, 1))));
+    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(VALID_SOCKET_FD));
+    EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::OK));
 
-    // const auto connection = http_client->createConnection("www.example.com", 8080);
-    // ASSERT_NE(connection, nullptr);
-    // EXPECT_FALSE(connection->isClosed());
+    const auto connection = http_client->createConnection(TEST_IP, TEST_PORT);
+    ASSERT_NE(connection, nullptr);
+    EXPECT_FALSE(connection->isClosed());
 
-    // connection->closeConnection();
-    // EXPECT_TRUE(connection->isClosed());
+    EXPECT_CALL(*network_utils, closeSocket(_));
+    http_client->closeConnection(*connection);
+    EXPECT_TRUE(connection->isClosed());
+
+    http_client->closeConnection(*connection);
+    http_client->closeConnection(*connection);
 }
 
 } // namespace

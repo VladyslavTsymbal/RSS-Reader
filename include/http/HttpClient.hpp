@@ -41,11 +41,8 @@ protected:
     virtual std::stringstream
     getResponseImpl(const int socket_fd);
 
-    virtual std::unique_ptr<HttpConnection>
-    createConnectionImpl(std::string ip, const unsigned int port);
-
 protected:
-    std::shared_ptr<INetworkUtils> m_network_utils = std::shared_ptr<NetworkUtils>();
+    std::shared_ptr<INetworkUtils> m_network_utils = std::make_shared<NetworkUtils>();
 };
 
 } // namespace http

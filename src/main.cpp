@@ -30,7 +30,7 @@ main()
 
     std::cout << response->getData() << std::endl;
 
-    connection->closeConnection();
+    http_client.closeConnection(*connection);
 
     return 0;
 }

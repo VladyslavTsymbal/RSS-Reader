@@ -23,12 +23,6 @@ struct MockHttpClient : public http::HttpClient
             (const int socket_fd, const std::string&),
             (override));
 
-    MOCK_METHOD(
-            std::unique_ptr<http::HttpConnection>,
-            createConnectionImpl,
-            (std::string ip, const unsigned int port),
-            (override));
-
     MOCK_METHOD(std::stringstream, getResponseImpl, (const int), (override));
 
     utils::network::INetworkUtils*

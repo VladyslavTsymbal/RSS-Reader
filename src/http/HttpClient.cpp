@@ -22,12 +22,6 @@ HttpClient::HttpClient(std::shared_ptr<INetworkUtils> network_utils)
 std::unique_ptr<IHttpConnection>
 HttpClient::createConnection(std::string ip, const unsigned int port)
 {
-    return createConnectionImpl(std::move(ip), port);
-}
-
-std::unique_ptr<HttpConnection>
-HttpClient::createConnectionImpl(std::string ip, const unsigned int port)
-{
     using namespace utils::network;
 
     const auto hints = AddrInfoBuilder()
