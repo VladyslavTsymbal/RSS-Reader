@@ -2,6 +2,11 @@
 
 namespace utils::network {
 
+NetworkUtils::NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper)
+    : m_syscalls_wrapper(std::move(syscalls_wrapper))
+{
+}
+
 int
 NetworkUtils::createSocket(const addrinfo* addr)
 {
@@ -9,7 +14,8 @@ NetworkUtils::createSocket(const addrinfo* addr)
 
     for (auto it = addr; it != nullptr; it = it->ai_next)
     {
-        socket_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+        socket_fd = m_syscalls_wrapper->socketSyscall(
+                addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 
         if (socket_fd >= 0)
         {
@@ -20,12 +26,13 @@ NetworkUtils::createSocket(const addrinfo* addr)
     return socket_fd;
 }
 
+// TODO: Change return type to int
 void
 NetworkUtils::closeSocket(const int socket)
 {
     if (socket >= 0)
     {
-        close(socket);
+        m_syscalls_wrapper->closeSyscall(socket);
     }
 }
 
@@ -34,7 +41,7 @@ NetworkUtils::connectSocket(const int socket, const addrinfo* info)
 {
     for (auto it = info; it != nullptr; it = it->ai_next)
     {
-        if (connect(socket, it->ai_addr, it->ai_addrlen) == 0)
+        if (m_syscalls_wrapper->connectSyscall(socket, it->ai_addr, it->ai_addrlen) == 0)
         {
             return StatusCode::OK;
         }
@@ -49,7 +56,8 @@ NetworkUtils::getAddrInfo(const std::string& ip, const std::string& port, const 
     int status = 0;
     addrinfo* result;
 
-    if ((status = getaddrinfo(ip.c_str(), port.c_str(), hints, &result)) != 0)
+    if ((status = m_syscalls_wrapper->getaddrinfoSyscall(
+                 ip.c_str(), port.c_str(), hints, &result)) != 0)
     {
         return std::make_pair(nullptr, status);
     }
