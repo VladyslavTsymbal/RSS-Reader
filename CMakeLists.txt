@@ -21,7 +21,7 @@ if (NOT openssl_POPULATED)
     message (FATAL_ERROR "`OpenSSL` is required to build application. Use FetchContent to populate it.")
 endif ()
 
-target_link_libraries (rss_reader PRIVATE openssl)
+target_link_libraries (rss_reader PRIVATE ssl)
 
 option (ENABLE_TESTS "Enable Utils tests" OFF)
 if (ENABLE_TESTS)
