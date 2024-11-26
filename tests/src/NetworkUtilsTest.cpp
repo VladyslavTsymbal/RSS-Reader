@@ -7,6 +7,7 @@ namespace {
 
 using namespace testing;
 using utils::network::NetworkUtils;
+using utils::network::AddrInfoPtr;
 
 constexpr int INVALID_SOCK_FD = -1;
 constexpr int VALID_SOCK_FD = 123;
@@ -192,6 +193,30 @@ TEST_F(NetworkUtilsTest, when_connect_syscall_successful_then_other_addrinfo_ent
 
     // Cleanup linked list
     deleteAddrinfoList(info);
+}
+
+TEST_F(NetworkUtilsTest, when_getaddrinfo_syscall_fails_then_nullptr_and_error_code_returned)
+{
+    const int error_code = EAI_FAIL;
+
+    EXPECT_CALL(*syscalls_wrapper, getaddrinfoSyscall(_, _, _, _)).WillOnce(Return(error_code));
+    const auto [result, error] = network_utils->getAddrInfo("ip", "port", nullptr);
+
+    EXPECT_EQ(result, nullptr);
+    EXPECT_EQ(error, error_code);
+}
+
+TEST_F(NetworkUtilsTest, when_getaddrinfo_syscall_successful_then_valid_data_returned)
+{
+    addrinfo* info = (addrinfo*) malloc(sizeof(addrinfo));
+    std::memset(info, 0, sizeof(addrinfo));
+
+    EXPECT_CALL(*syscalls_wrapper, getaddrinfoSyscall(_, _, _, _))
+            .WillOnce(DoAll(SetArgumentPointee<3>(info), Return(0)));
+    const auto [result, error] = network_utils->getAddrInfo("ip", "port", nullptr);
+
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(error, 0);
 }
 
 } // namespace
