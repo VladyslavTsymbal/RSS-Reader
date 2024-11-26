@@ -10,15 +10,15 @@ set (TEST_SRCS ${_TEST_SRCS}
                src/utils/network/AddrInfoBuilder.cpp)
 
 add_executable (
-  rss-reader-tests
-  ${TEST_SRCS}
+    rss-reader-tests
+    ${TEST_SRCS}
 )
 
 target_include_directories (rss-reader-tests PRIVATE include)
 target_include_directories (rss-reader-tests PRIVATE tests/include)
 target_link_libraries (
-  rss-reader-tests
-  GTest::gmock_main
+    rss-reader-tests
+    GTest::gmock_main
 )
 
 include (GoogleTest)
