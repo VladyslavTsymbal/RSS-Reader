@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/INetworkUtils.hpp"
+#include "utils/network/INetworkUtils.hpp"
 
 #include <gmock/gmock.h>
 

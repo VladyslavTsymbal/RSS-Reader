@@ -1,5 +1,5 @@
 #include "http/HttpServer.hpp"
-#include "utils/NetworkUtils.hpp"
+#include "utils/network/NetworkUtils.hpp"
 
 #include <arpa/inet.h>
 

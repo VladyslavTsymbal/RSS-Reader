@@ -1,5 +1,5 @@
 #include "MockSysCallsWrapper.hpp"
-#include "utils/NetworkUtils.hpp"
+#include "utils/network/NetworkUtils.hpp"
 
 #include <cstring>
 

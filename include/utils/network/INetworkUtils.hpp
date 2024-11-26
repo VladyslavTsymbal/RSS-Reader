@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/StatusCode.hpp"
+#include "utils/network/StatusCode.hpp"
 
 #include <memory>
 #include <functional>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/ISysCallsWrapper.hpp"
+#include "utils/network/ISysCallsWrapper.hpp"
 
 namespace utils::network {
 

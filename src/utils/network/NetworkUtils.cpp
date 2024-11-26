@@ -1,4 +1,4 @@
-#include "utils/NetworkUtils.hpp"
+#include "utils/network/NetworkUtils.hpp"
 
 namespace utils::network {
 

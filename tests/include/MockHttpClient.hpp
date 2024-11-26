@@ -2,7 +2,7 @@
 
 #include "http/HttpClient.hpp"
 #include "http/HttpConnection.hpp"
-#include "utils/INetworkUtils.hpp"
+#include "utils/network/INetworkUtils.hpp"
 
 #include <gmock/gmock.h>
 

@@ -2,8 +2,8 @@
 
 #include "http/IHttpClient.hpp"
 #include "http/HttpResponse.hpp"
-#include "utils/NetworkUtils.hpp"
-#include "utils/StatusCode.hpp"
+#include "utils/network/NetworkUtils.hpp"
+#include "utils/network/StatusCode.hpp"
 
 namespace http {
 

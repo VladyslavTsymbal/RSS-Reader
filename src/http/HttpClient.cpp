@@ -2,8 +2,8 @@
 #include "http/HttpConnection.hpp"
 #include "http/HttpRequest.hpp"
 #include "http/HttpResponse.hpp"
-#include "utils/AddrInfoBuilder.hpp"
-#include "utils/StatusCode.hpp"
+#include "utils/network/AddrInfoBuilder.hpp"
+#include "utils/network/StatusCode.hpp"
 
 #include <format>
 #include <sstream>

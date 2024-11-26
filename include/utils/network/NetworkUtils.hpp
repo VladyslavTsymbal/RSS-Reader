@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utils/INetworkUtils.hpp"
-#include "utils/SysCallsWrapper.hpp"
+#include "utils/network/INetworkUtils.hpp"
+#include "utils/network/SysCallsWrapper.hpp"
 
 namespace utils::network {
 
