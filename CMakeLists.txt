@@ -10,9 +10,18 @@ add_executable (rss_reader ${SRCS})
 target_include_directories (rss_reader PRIVATE include)
 target_compile_options (rss_reader PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-# TODO: Don't use from system. Add `external` dir and place externals there
-find_package(OpenSSL REQUIRED)
-target_link_libraries (rss_reader PRIVATE OpenSSL::SSL)
+FetchContent_Declare (
+    openssl
+    GIT_REPOSITORY https://github.com/openssl/openssl
+    GIT_TAG        openssl-3.1.3
+)
+FetchContent_MakeAvailable (openssl)
+FetchContent_GetProperties (openssl)
+if (NOT openssl_POPULATED)
+    message (FATAL_ERROR "`OpenSSL` is required to build application. Use FetchContent to populate it.")
+endif ()
+
+target_link_libraries (rss_reader PRIVATE openssl)
 
 option (ENABLE_TESTS "Enable Utils tests" OFF)
 if (ENABLE_TESTS)
