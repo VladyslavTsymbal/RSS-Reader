@@ -4,13 +4,16 @@
 #include "http/HttpResponse.hpp"
 #include "utils/network/AddrInfoBuilder.hpp"
 #include "utils/network/StatusCode.hpp"
+#include "utils/Log.hpp"
 
+#include <cstring>
 #include <format>
 #include <sstream>
-#include <iostream>
 #include <string>
 
 namespace http {
+
+constexpr std::string_view LOG_TAG = "HttpClient";
 
 using utils::network::StatusCode;
 
@@ -32,27 +35,27 @@ HttpClient::createConnection(std::string ip, const unsigned int port)
     const auto [result, status] = m_network_utils->getAddrInfo(ip, std::to_string(port), &hints);
     if (result == nullptr)
     {
-        std::cerr << "getaddrinfo error: " << gai_strerror(status) << '\n';
+        LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(status));
         return nullptr;
     }
 
     const int socket_fd = m_network_utils->createSocket(result.get());
     if (socket_fd == -1)
     {
-        perror("socket");
+        LOG_ERROR(LOG_TAG, "createSocket failed: {}", strerror(errno));
         return nullptr;
     }
 
-    std::cout << "HttpConnection: Connecting to: " << ip << '\n';
+    LOG_INFO(LOG_TAG, "Connecting to: {}", ip);
     const auto is_connected = m_network_utils->connectSocket(socket_fd, result.get());
     if (is_connected == StatusCode::FAIL)
     {
-        perror("connect");
+        LOG_ERROR(LOG_TAG, "connectSocket failed: {}", strerror(errno));
         m_network_utils->closeSocket(socket_fd);
         return nullptr;
     }
 
-    std::cout << "HttpConnection: Connected successfully (" << ip << ")\n";
+    LOG_INFO(LOG_TAG, "Connected successfully ({})", ip);
     return std::make_unique<HttpConnection>(std::move(ip), port, socket_fd);
 }
 
@@ -110,23 +113,24 @@ HttpClient::sendRequest(const IHttpConnection& connection, const HttpRequest& re
 {
     if (connection.isClosed())
     {
-        std::cerr << "HttpClient: Unable to send request. Connection is already closed.\n";
+        LOG_ERROR(LOG_TAG, "Failed to send a request. Connection is already closed.");
         return StatusCode::FAIL;
     }
 
     const std::string request_str = prepareHttpRequest(request, connection.getUrl());
     if (request_str.empty())
     {
-        std::cerr << "HttpClient: Unable to send a request. Request method isn't valid.\n";
+        LOG_ERROR(LOG_TAG, "Failed to send a request. Request method isn't valid.");
         return StatusCode::FAIL;
     }
 
-    std::cout << "HttpClient: Sending the request:\n" << request_str << '\n';
+    LOG_INFO(LOG_TAG, "Sending the request...");
+    LOG_DEBUG(LOG_TAG, "Request: {}", request_str);
     const auto status = sendRequestImpl(connection.getSocket(), request_str);
 
     if (status == StatusCode::FAIL)
     {
-        perror("send error");
+        LOG_ERROR(LOG_TAG, "Send request failed: {}", strerror(errno));
     }
 
     return status;
@@ -162,14 +166,14 @@ HttpClient::getResponse(const IHttpConnection& connection, const HttpRequest& re
         return std::nullopt;
     }
 
-    std::cout << "HttpClient: Receiving the response\n";
+    LOG_INFO(LOG_TAG, "Receiving the response...");
 
     auto sstream = getResponseImpl(connection.getSocket());
     // If the stringstream has no data, that means the error is occured during receving
     // the response.
     if (sstream.rdbuf()->in_avail() == 0)
     {
-        perror("recv");
+        LOG_ERROR(LOG_TAG, "Getting the response failed: {}", strerror(errno));
         return std::nullopt;
     }
 

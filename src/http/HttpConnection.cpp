@@ -1,8 +1,9 @@
 #include "http/HttpConnection.hpp"
-
-#include <iostream>
+#include "utils/Log.hpp"
 
 namespace http {
+
+constexpr std::string_view LOG_TAG = "HttpConnection";
 
 HttpConnection::HttpConnection(std::string ip, const unsigned int port, const int socket)
     : m_ip_address(std::move(ip))
@@ -15,8 +16,9 @@ HttpConnection::~HttpConnection()
 {
     if (!isClosed())
     {
-        std::cerr << "HttpConnection: Connection wasn't closed. "
-                     "Please, close it with HttpClient::closeConnection.\n";
+        LOG_ERROR(
+                LOG_TAG,
+                "Connection wasn't closed. Please, close it with HttpClient::closeConnection.");
     }
 }
 

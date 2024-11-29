@@ -1,9 +1,11 @@
 #include "http/HttpRequest.hpp"
+#include "utils/Log.hpp"
 
 #include <unordered_map>
-#include <iostream>
 
 namespace http {
+
+constexpr std::string_view LOG_TAG = "HttpRequest";
 
 std::optional<std::string>
 requestMethodToString(HttpRequest::HttpRequestMethod request_method)
@@ -17,8 +19,7 @@ requestMethodToString(HttpRequest::HttpRequestMethod request_method)
     const auto it = conversion_map.find(request_method);
     if (it == std::end(conversion_map))
     {
-        std::cerr << "HttpRequest: Unexpected request method: " << static_cast<int>(request_method)
-                  << '\n';
+        LOG_ERROR(LOG_TAG, "Unexpected request method: {}", static_cast<int>(request_method));
         return std::nullopt;
     }
 

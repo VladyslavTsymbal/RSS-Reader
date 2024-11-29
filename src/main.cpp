@@ -1,7 +1,8 @@
 #include "http/HttpClient.hpp"
 #include "http/HttpRequest.hpp"
+#include "utils/Log.hpp"
 
-#include <iostream>
+constexpr std::string_view LOG_TAG = "main";
 
 int
 main()
@@ -12,7 +13,7 @@ main()
     auto connection = http_client.createConnection("127.0.0.1", 8080);
     if (!connection)
     {
-        std::cerr << "Failed to create connection.\n";
+        LOG_ERROR(LOG_TAG, "Failed to create connection.");
         return 1;
     }
 
@@ -24,11 +25,11 @@ main()
     const auto response = http_client.getResponse(*connection, request);
     if (!response)
     {
-        std::cerr << "Failed to getResponse!\n";
+        LOG_ERROR(LOG_TAG, "Failed to getResponse!");
         return 1;
     }
 
-    std::cout << response->getData() << std::endl;
+    LOG_INFO(LOG_TAG, "Response data: {}", response->getData());
 
     http_client.closeConnection(*connection);
 
