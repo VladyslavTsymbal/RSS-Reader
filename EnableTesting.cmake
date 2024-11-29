@@ -19,6 +19,7 @@ target_include_directories (rss-reader-tests PRIVATE tests/include)
 target_link_libraries (
     rss-reader-tests
     GTest::gmock_main
+    spdlog
 )
 
 include (GoogleTest)
