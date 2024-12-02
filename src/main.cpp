@@ -1,5 +1,9 @@
 #include "http/HttpClient.hpp"
 #include "http/HttpRequest.hpp"
+#include "http/HttpConnectionFactory.hpp"
+#include "http/IHttpConnection.hpp"
+#include "utils/network/NetworkUtils.hpp"
+#include "utils/network/SysCallsWrapper.hpp"
 #include "utils/Log.hpp"
 
 constexpr std::string_view LOG_TAG = "main";
@@ -9,8 +13,12 @@ main()
 {
     using namespace http;
 
-    HttpClient http_client;
-    auto connection = http_client.createConnection("127.0.0.1", 8080);
+    auto syscall_wrappers = std::make_shared<utils::network::SysCallsWrapper>();
+    auto network_utils = std::make_shared<utils::network::NetworkUtils>(syscall_wrappers);
+
+    HttpConnectionFactory connection_factory(network_utils);
+    auto connection = connection_factory.createConnection("127.0.0.1", 8080);
+
     if (!connection)
     {
         LOG_ERROR(LOG_TAG, "Failed to create connection.");
@@ -18,11 +26,13 @@ main()
     }
 
     HttpRequest request = HttpRequestBuilder()
+                                  .setHost("127.0.0.1")
                                   .setRequestType(HttpRequest::HttpRequestMethod::GET)
                                   .setRequestUrl("/feed.xml")
                                   .build();
 
-    const auto response = http_client.getResponse(*connection, request);
+    HttpClient http_client;
+    const auto response = http_client.sendRequest(*connection, request);
     if (!response)
     {
         LOG_ERROR(LOG_TAG, "Failed to getResponse!");
@@ -30,8 +40,6 @@ main()
     }
 
     LOG_INFO(LOG_TAG, "Response data: {}", response->getData());
-
-    http_client.closeConnection(*connection);
 
     return 0;
 }

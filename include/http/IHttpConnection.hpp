@@ -1,6 +1,8 @@
 #pragma once
 
-#include <string>
+#include "utils/network/StatusCode.hpp"
+
+#include <sstream>
 
 namespace http {
 
@@ -10,23 +12,15 @@ public:
     virtual ~IHttpConnection() = default;
 
     IHttpConnection(const IHttpConnection&) = delete;
+
     IHttpConnection&
     operator=(const IHttpConnection&) = delete;
 
-    virtual bool
-    isClosed() const = 0;
+    virtual utils::network::StatusCode
+    sendBytes(std::stringstream& bytes) const = 0;
 
-    virtual void
-    closeConnection() = 0;
-
-    virtual std::string
-    getUrl() const = 0;
-
-    virtual int
-    getSocket() const = 0;
-
-    virtual unsigned int
-    getPort() const = 0;
+    virtual std::stringstream
+    receiveBytes() const = 0;
 
 protected:
     IHttpConnection() = default;

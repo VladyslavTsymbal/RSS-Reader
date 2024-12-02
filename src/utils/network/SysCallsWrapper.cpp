@@ -1,5 +1,6 @@
 #include "utils/network/SysCallsWrapper.hpp"
-#include <unistd.h>
+
+#include <netdb.h> // for addrinfo (ptr only), getaddrinfo
 
 namespace utils::network {
 
@@ -7,12 +8,6 @@ int
 SysCallsWrapper::socketSyscall(int domain, int type, int protocol)
 {
     return socket(domain, type, protocol);
-}
-
-int
-SysCallsWrapper::closeSyscall(const int socket)
-{
-    return close(socket);
 }
 
 int

@@ -1,7 +1,10 @@
 #include "http/HttpRequest.hpp"
-#include "utils/Log.hpp"
 
-#include <unordered_map>
+#include <iterator>      // for end
+#include <string_view>   // for string_view
+#include <unordered_map> // for unordered_map, operator==, _Node_iterator_base
+#include <utility>       // for move, pair
+#include "utils/Log.hpp" // for LOG_ERROR
 
 namespace http {
 
@@ -42,17 +45,25 @@ HttpRequestBuilder::setRequestUrl(std::string url)
     return *this;
 }
 
+HttpRequestBuilder&
+HttpRequestBuilder::setHost(std::string host)
+{
+    m_host = std::move(host);
+    return *this;
+}
+
 HttpRequest
 HttpRequestBuilder::build()
 {
-    return HttpRequest(m_method, std::move(m_url));
+    return HttpRequest(std::move(m_host), std::move(m_url), m_method);
 }
 
 // HttpRequest
 
-HttpRequest::HttpRequest(HttpRequestMethod method, std::string url)
-    : m_method{method}
+HttpRequest::HttpRequest(std::string host, std::string url, HttpRequestMethod method)
+    : m_host(std::move(host))
     , m_url(std::move(url))
+    , m_method{method}
 {
 }
 
@@ -68,4 +79,9 @@ HttpRequest::getUrl() const
     return m_url;
 }
 
+const std::string&
+HttpRequest::getHost() const
+{
+    return m_host;
+}
 } // namespace http

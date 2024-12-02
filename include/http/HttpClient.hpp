@@ -1,48 +1,21 @@
 #pragma once
 
-#include "http/IHttpClient.hpp"
-#include "http/HttpResponse.hpp"
-#include "utils/network/NetworkUtils.hpp"
-#include "utils/network/StatusCode.hpp"
+#include "http/HttpResponse.hpp" // for HttpResponse
+
+#include <optional> // for optional
 
 namespace http {
 
-using utils::network::INetworkUtils;
-using utils::network::NetworkUtils;
-
 class HttpRequest;
-class HttpConnection;
+class IHttpConnection;
 
-class HttpClient : public IHttpClient
+class HttpClient
 {
 public:
     HttpClient() = default;
-    HttpClient(std::shared_ptr<INetworkUtils> network_utils);
-
-    std::unique_ptr<IHttpConnection>
-    createConnection(std::string ip, const unsigned int port) override;
-
-    void
-    closeConnection(IHttpConnection& connection) override;
 
     std::optional<HttpResponse>
-    getResponse(const IHttpConnection& connection, const HttpRequest& request) override;
-
-protected:
-    utils::network::StatusCode
     sendRequest(const IHttpConnection& connection, const HttpRequest& request);
-
-    virtual utils::network::StatusCode
-    sendRequestImpl(const int socket_fd, const std::string& request);
-
-    std::string
-    prepareHttpRequest(const HttpRequest& request, const std::string& ip);
-
-    virtual std::stringstream
-    getResponseImpl(const int socket_fd);
-
-protected:
-    std::shared_ptr<INetworkUtils> m_network_utils = std::make_shared<NetworkUtils>();
 };
 
 } // namespace http

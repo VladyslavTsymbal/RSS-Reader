@@ -5,27 +5,34 @@
 #include <memory>
 #include <functional>
 #include <netdb.h>
+#include <expected>
+#include <sstream>
+#include <string_view>
 
 namespace utils::network {
 
 using AddrInfoPtr = std::unique_ptr<addrinfo, std::function<void(addrinfo*)>>;
+using Socket = std::unique_ptr<int, std::function<int(int*)>>;
 
 class INetworkUtils
 {
 public:
     virtual ~INetworkUtils() = default;
 
-    virtual int
+    virtual Socket
     createSocket(const addrinfo* addr) = 0;
-
-    virtual void
-    closeSocket(const int socket) = 0;
 
     virtual StatusCode
     connectSocket(const int socket, const addrinfo* info) = 0;
 
-    virtual std::pair<AddrInfoPtr, int>
-    getAddrInfo(const std::string& ip, const std::string& port, const addrinfo* hints) = 0;
+    virtual std::expected<AddrInfoPtr, int>
+    getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) = 0;
+
+    virtual StatusCode
+    sendBytes(const int socket_fd, std::istream& bytes) const = 0;
+
+    virtual std::stringstream
+    receiveBytes(const int socket_fd) const = 0;
 
 protected:
     INetworkUtils() = default;

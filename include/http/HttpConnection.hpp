@@ -1,48 +1,33 @@
 #pragma once
 
 #include "http/IHttpConnection.hpp"
-
-#include <string>
+#include "utils/network/INetworkUtils.hpp"
 
 namespace http {
-
-class HttpClient;
 
 class HttpConnection : public IHttpConnection
 {
 public:
-    friend class HttpClient;
+    HttpConnection() = delete;
 
-    // Should be used only by HttpClient
-    HttpConnection(std::string ip, const unsigned int port, const int socket);
-    ~HttpConnection() override;
+    HttpConnection(
+            utils::network::Socket socket,
+            std::shared_ptr<utils::network::INetworkUtils> network_utils);
 
     HttpConnection(HttpConnection&& other) noexcept;
 
     HttpConnection&
     operator=(HttpConnection&& other) noexcept;
 
-    bool
-    isClosed() const override;
+    utils::network::StatusCode
+    sendBytes(std::stringstream& bytes) const override;
 
-    void
-    closeConnection() override;
-
-    std::string
-    getUrl() const override;
-
-    int
-    getSocket() const override;
-
-    unsigned int
-    getPort() const override;
+    std::stringstream
+    receiveBytes() const override;
 
 private:
-    std::string m_ip_address;
-    unsigned int m_port;
-    // TODO: Socket should support RAII idiom
-    int m_sock_fd;
-    bool m_is_closed{false};
+    utils::network::Socket m_socket;
+    std::shared_ptr<utils::network::INetworkUtils> m_network_utils;
 };
 
 } // namespace http

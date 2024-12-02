@@ -1,82 +1,44 @@
 #include "http/HttpConnection.hpp"
-#include "utils/Log.hpp"
+#include "utils/network/INetworkUtils.hpp"
+#include "utils/network/StatusCode.hpp"
 
 namespace http {
 
-constexpr std::string_view LOG_TAG = "HttpConnection";
+using Socket = utils::network::Socket;
+using utils::network::INetworkUtils;
+using utils::network::StatusCode;
 
-HttpConnection::HttpConnection(std::string ip, const unsigned int port, const int socket)
-    : m_ip_address(std::move(ip))
-    , m_port(port)
-    , m_sock_fd(socket)
+HttpConnection::HttpConnection(Socket socket, std::shared_ptr<INetworkUtils> network_utils)
+    : m_socket(std::move(socket))
+    , m_network_utils(std::move(network_utils))
 {
-}
-
-HttpConnection::~HttpConnection()
-{
-    if (!isClosed())
-    {
-        LOG_ERROR(
-                LOG_TAG,
-                "Connection wasn't closed. Please, close it with HttpClient::closeConnection.");
-    }
 }
 
 HttpConnection::HttpConnection(HttpConnection&& other) noexcept
 {
-    m_ip_address = std::move(other.m_ip_address);
-    m_port = other.m_port;
-    // TODO: Check carefully this case. Socket can be still opened and we will get leak here.
-    std::swap(m_sock_fd, other.m_sock_fd);
-    m_is_closed = other.m_is_closed;
-
-    other.m_port = 0;
-    other.m_is_closed = true;
+    m_socket = std::move(other.m_socket);
+    m_network_utils = std::move(other.m_network_utils);
 }
 
 HttpConnection&
 HttpConnection::operator=(HttpConnection&& other) noexcept
 {
-    m_ip_address = std::move(other.m_ip_address);
-    m_port = other.m_port;
-    // TODO: Check carefully this case. Socket can be still opened and we will get leak here.
-    std::swap(m_sock_fd, other.m_sock_fd);
-    m_is_closed = other.m_is_closed;
-
-    other.m_port = 0;
-    other.m_is_closed = true;
+    m_socket = std::move(other.m_socket);
+    m_network_utils = std::move(other.m_network_utils);
 
     return *this;
 }
 
-bool
-HttpConnection::isClosed() const
+StatusCode
+HttpConnection::sendBytes(std::stringstream& bytes) const
 {
-    return m_is_closed;
+    return m_network_utils->sendBytes(*m_socket, bytes);
 }
 
-void
-HttpConnection::closeConnection()
+std::stringstream
+HttpConnection::receiveBytes() const
 {
-    m_is_closed = true;
-}
-
-std::string
-HttpConnection::getUrl() const
-{
-    return m_ip_address;
-}
-
-int
-HttpConnection::getSocket() const
-{
-    return m_sock_fd;
-}
-
-unsigned int
-HttpConnection::getPort() const
-{
-    return m_port;
+    return m_network_utils->receiveBytes(*m_socket);
 }
 
 } // namespace http

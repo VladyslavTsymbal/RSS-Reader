@@ -24,17 +24,24 @@ public:
     const std::string&
     getUrl() const;
 
-private:
-    HttpRequest(HttpRequestMethod method, std::string url);
+    const std::string&
+    getHost() const;
 
 private:
-    const HttpRequestMethod m_method;
+    HttpRequest(std::string host, std::string url, HttpRequestMethod method);
+
+private:
+    const std::string m_host;
     const std::string m_url;
+    const HttpRequestMethod m_method;
 };
 
 class HttpRequestBuilder
 {
 public:
+    HttpRequestBuilder&
+    setHost(std::string host);
+
     HttpRequestBuilder&
     setRequestType(HttpRequest::HttpRequestMethod method);
 
@@ -45,8 +52,9 @@ public:
     build();
 
 private:
+    std::string m_host;
+    std::string m_url;
     HttpRequest::HttpRequestMethod m_method = HttpRequest::HttpRequestMethod::GET;
-    std::string m_url{'/'};
 };
 
 std::optional<std::string>

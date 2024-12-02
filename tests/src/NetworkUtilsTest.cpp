@@ -8,6 +8,7 @@ namespace {
 using namespace testing;
 using utils::network::NetworkUtils;
 using utils::network::AddrInfoPtr;
+using utils::network::Socket;
 
 constexpr int INVALID_SOCK_FD = -1;
 constexpr int VALID_SOCK_FD = 123;
@@ -65,23 +66,11 @@ deleteAddrinfoList(addrinfo* list)
     }
 }
 
-TEST_F(NetworkUtilsTest, when_valid_fd_passed_closeSocket_then_close_syscall_invoked)
-{
-    EXPECT_CALL(*syscalls_wrapper, closeSyscall(_));
-    network_utils->closeSocket(VALID_SOCK_FD);
-}
-
-TEST_F(NetworkUtilsTest, when_invalid_fd_passed_closeSocket_then_close_syscall_not_invoked)
-{
-    EXPECT_CALL(*syscalls_wrapper, closeSyscall(_)).Times(0);
-    network_utils->closeSocket(INVALID_SOCK_FD);
-}
-
 TEST_F(NetworkUtilsTest, when_addrinfo_is_nullptr_then_socket_syscall_is_never_called)
 {
     EXPECT_CALL(*syscalls_wrapper, socketSyscall(_, _, _)).Times(0);
-    const int sock_fd = network_utils->createSocket(nullptr);
-    ASSERT_EQ(sock_fd, -1);
+    Socket socket = network_utils->createSocket(nullptr);
+    ASSERT_EQ(socket, nullptr);
 }
 
 TEST_F(NetworkUtilsTest,
@@ -97,8 +86,8 @@ TEST_F(NetworkUtilsTest,
             .Times(list_size)
             .WillRepeatedly(Return(-1));
 
-    const int sock_fd = network_utils->createSocket(info);
-    EXPECT_EQ(sock_fd, -1);
+    Socket socket = network_utils->createSocket(info);
+    EXPECT_EQ(socket, nullptr);
 
     // Cleanup linked list
     deleteAddrinfoList(info);
@@ -111,8 +100,8 @@ TEST_F(NetworkUtilsTest, when_socket_syscall_successful_then_valid_socket_descri
 
     EXPECT_CALL(*syscalls_wrapper, socketSyscall(_, _, _)).Times(1).WillOnce(Return(VALID_SOCK_FD));
 
-    const int sock_fd = network_utils->createSocket(info);
-    EXPECT_EQ(sock_fd, VALID_SOCK_FD);
+    Socket socket = network_utils->createSocket(info);
+    EXPECT_EQ(*socket, VALID_SOCK_FD);
 
     delete info;
 }
@@ -130,8 +119,8 @@ TEST_F(NetworkUtilsTest, when_socket_syscall_successful_then_other_addrinfo_entr
             .WillOnce(Return(-1))
             .WillOnce(Return(VALID_SOCK_FD));
 
-    const int sock_fd = network_utils->createSocket(info);
-    EXPECT_EQ(sock_fd, VALID_SOCK_FD);
+    Socket socket = network_utils->createSocket(info);
+    EXPECT_EQ(*socket, VALID_SOCK_FD);
 
     // Cleanup linked list
     deleteAddrinfoList(info);
@@ -200,10 +189,10 @@ TEST_F(NetworkUtilsTest, when_getaddrinfo_syscall_fails_then_nullptr_and_error_c
     const int error_code = EAI_FAIL;
 
     EXPECT_CALL(*syscalls_wrapper, getaddrinfoSyscall(_, _, _, _)).WillOnce(Return(error_code));
-    const auto [result, error] = network_utils->getAddrInfo("ip", "port", nullptr);
+    const auto ptrOrError = network_utils->getAddrInfo("ip", "port", nullptr);
 
-    EXPECT_EQ(result, nullptr);
-    EXPECT_EQ(error, error_code);
+    EXPECT_FALSE(ptrOrError.has_value());
+    EXPECT_EQ(ptrOrError.error(), error_code);
 }
 
 TEST_F(NetworkUtilsTest, when_getaddrinfo_syscall_successful_then_valid_data_returned)
@@ -213,10 +202,9 @@ TEST_F(NetworkUtilsTest, when_getaddrinfo_syscall_successful_then_valid_data_ret
 
     EXPECT_CALL(*syscalls_wrapper, getaddrinfoSyscall(_, _, _, _))
             .WillOnce(DoAll(SetArgumentPointee<3>(info), Return(0)));
-    const auto [result, error] = network_utils->getAddrInfo("ip", "port", nullptr);
 
-    EXPECT_NE(result, nullptr);
-    EXPECT_EQ(error, 0);
+    const auto ptrOrError = network_utils->getAddrInfo("ip", "port", nullptr);
+    EXPECT_TRUE(ptrOrError.has_value());
 }
 
 } // namespace

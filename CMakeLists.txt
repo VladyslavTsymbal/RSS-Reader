@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.13)
 project (rss-reader)
 
-# Enable the C++20 standard
-set (CMAKE_CXX_STANDARD 20)
+# Enable the C++23 standard
+set (CMAKE_CXX_STANDARD 23)
 include (FetchContent)
 
 file (GLOB_RECURSE SRCS src/*.cpp)

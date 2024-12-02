@@ -2,6 +2,10 @@
 
 #include "utils/network/ISysCallsWrapper.hpp"
 
+#include <sys/socket.h> // for socklen_t
+
+struct addrinfo;
+
 namespace utils::network {
 
 class SysCallsWrapper : public ISysCallsWrapper
@@ -11,9 +15,6 @@ public:
 
     int
     socketSyscall(int domain, int type, int protocol) override;
-
-    int
-    closeSyscall(int fd) override;
 
     int
     connectSyscall(int fd, const sockaddr* addr, socklen_t len) override;
