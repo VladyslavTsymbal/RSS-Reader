@@ -13,6 +13,7 @@ target_compile_options (rss_reader PRIVATE -Wall -Wextra -Wpedantic -Werror)
 # Fetch and populate dependencies
 include (cmake/openssl.cmake)
 include (cmake/spdlog.cmake)
+include (cmake/boost.cmake)
 
 target_link_libraries (rss_reader PRIVATE ssl spdlog)
 
