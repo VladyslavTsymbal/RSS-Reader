@@ -2,6 +2,7 @@ FetchContent_Declare (
     openssl
     GIT_REPOSITORY https://github.com/openssl/openssl
     GIT_TAG        openssl-3.1.3
+    GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable (openssl)
 FetchContent_GetProperties (openssl)
