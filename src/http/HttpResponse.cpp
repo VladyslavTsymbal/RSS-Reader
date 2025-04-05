@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <boost/algorithm/string_regex.hpp>
 #include <iterator>
+#include <optional>
 
 namespace http {
 
@@ -95,15 +96,13 @@ HttpResponse::parseHeaders(std::vector<std::string>& vec)
 void
 HttpResponse::parseBody(std::vector<std::string>& vec)
 {
+    // IDK, but `boost::split_regex` adds new empty line in case
+    // response does not have a body. So, I dont need to check if
+    // body present or not and can blindly remove the "\r\n" separator.
     m_body = vec.back();
     vec.pop_back();
-
-    if (!m_body.empty())
-    {
-        // If body is not empty then we also need to remove '\r\n',
-        // which separates headers and body.
-        vec.pop_back();
-    }
+    // Drop "\r\n"
+    vec.pop_back();
 }
 
 HttpResponse::HttpResponse(std::stringstream response)
@@ -116,6 +115,29 @@ const std::string&
 HttpResponse::getBody() const
 {
     return m_body;
+}
+
+std::optional<std::string>
+HttpResponse::getHeader(const std::string& key) const
+{
+    if (m_headers.find(key) != std::end(m_headers))
+    {
+        return m_headers.at(key);
+    }
+
+    return std::nullopt;
+}
+
+int
+HttpResponse::getStatusCode() const
+{
+    return m_status_code;
+}
+
+const std::string&
+HttpResponse::getDescription() const
+{
+    return m_description;
 }
 
 } // namespace http

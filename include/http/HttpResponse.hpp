@@ -19,6 +19,15 @@ public:
     bool
     isSuccessful() const;
 
+    std::optional<std::string>
+    getHeader(const std::string& key) const;
+
+    int
+    getStatusCode() const;
+
+    const std::string&
+    getDescription() const;
+
 private:
     void
     parseResponse(std::vector<std::string>& vec);
