@@ -1,25 +1,43 @@
 #pragma once
 
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 
 namespace http {
+
+using HttpHeaders = std::unordered_map<std::string, std::string>;
 
 class HttpResponse
 {
 public:
-    HttpResponse(std::stringstream response)
-        : m_response(std::move(response))
-    {
-    }
+    HttpResponse(std::stringstream response);
 
-    std::string
-    getData() const
-    {
-        return m_response.str();
-    }
+    const std::string&
+    getBody() const;
+
+    bool
+    isSuccessful() const;
 
 private:
-    std::stringstream m_response;
+    void
+    parseResponse(std::vector<std::string>& vec);
+
+    void
+    parseStatusLine(std::vector<std::string>& vec);
+
+    void
+    parseHeaders(std::vector<std::string>& vec);
+
+    void
+    parseBody(std::vector<std::string>& vec);
+
+private:
+    HttpHeaders m_headers;
+    std::string m_body;
+    std::string m_description;
+    std::string m_http_version;
+    int m_status_code{-1};
 };
 
 } // namespace http

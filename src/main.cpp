@@ -28,7 +28,7 @@ main()
     HttpRequest request = HttpRequestBuilder()
                                   .setHost("127.0.0.1")
                                   .setRequestType(HttpRequest::HttpRequestMethod::GET)
-                                  .setRequestUrl("/feed.xml")
+                                  .setRequestUrl("/tests/feed.xml")
                                   .build();
 
     HttpClient http_client;
@@ -39,7 +39,7 @@ main()
         return 1;
     }
 
-    LOG_INFO(LOG_TAG, "Response data: {}", response->getData());
+    LOG_INFO(LOG_TAG, "Response data: \n{}", response->getBody());
 
     return 0;
 }
