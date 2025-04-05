@@ -9,3 +9,5 @@ FetchContent_GetProperties (spdlog)
 if (NOT spdlog_POPULATED)
     message (FATAL_ERROR "`spdlog` is required to build application. Use FetchContent to populate it.")
 endif ()
+
+list(APPEND libs_to_link "spdlog")

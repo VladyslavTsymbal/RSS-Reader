@@ -9,3 +9,5 @@ FetchContent_GetProperties (openssl)
 if (NOT openssl_POPULATED)
     message (FATAL_ERROR "`OpenSSL` is required to build application. Use FetchContent to populate it.")
 endif ()
+
+list(APPEND libs_to_link "ssl")

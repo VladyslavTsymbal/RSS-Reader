@@ -10,12 +10,16 @@ add_executable (rss_reader ${SRCS})
 target_include_directories (rss_reader PRIVATE include)
 target_compile_options (rss_reader PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
+# Declare the variable, containing all libraries which
+# later will be linked.
+set (libs_to_link)
+
 # Fetch and populate dependencies
 include (cmake/openssl.cmake)
 include (cmake/spdlog.cmake)
 include (cmake/boost.cmake)
 
-target_link_libraries (rss_reader PRIVATE ssl spdlog)
+target_link_libraries (rss_reader PRIVATE ${libs_to_link})
 
 option (ENABLE_TESTS "Enable tests" OFF)
 if (ENABLE_TESTS)
