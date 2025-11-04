@@ -6,7 +6,9 @@
 #include "utils/network/SysCallsWrapper.hpp"
 #include "utils/Log.hpp"
 
-constexpr std::string_view LOG_TAG = "main";
+namespace {
+constexpr std::string_view LOG_TAG = "ClientMain";
+}
 
 int
 main()
@@ -35,7 +37,7 @@ main()
     const auto response = http_client.sendRequest(*connection, request);
     if (!response)
     {
-        LOG_ERROR(LOG_TAG, "Failed to getResponse!");
+        LOG_ERROR(LOG_TAG, "Failed to get response from server!");
         return 1;
     }
 

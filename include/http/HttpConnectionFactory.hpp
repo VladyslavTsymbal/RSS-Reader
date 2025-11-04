@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/network/Types.hpp"
+
 #include <memory>
 #include <string_view>
 
@@ -17,8 +19,11 @@ public:
     HttpConnectionFactory() = delete;
     HttpConnectionFactory(std::shared_ptr<utils::network::INetworkUtils> network_utils);
 
-    virtual std::unique_ptr<IHttpConnection>
+    std::unique_ptr<IHttpConnection>
     createConnection(std::string_view ip, const unsigned int port);
+
+    std::unique_ptr<IHttpConnection>
+    createConnection(utils::network::Socket socket);
 
 protected:
     std::shared_ptr<utils::network::INetworkUtils> m_network_utils;

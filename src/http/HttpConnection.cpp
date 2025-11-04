@@ -1,12 +1,17 @@
 #include "http/HttpConnection.hpp"
 #include "utils/network/INetworkUtils.hpp"
 #include "utils/network/StatusCode.hpp"
+#include "utils/network/Types.hpp"
 
-namespace http {
+namespace {
 
-using Socket = utils::network::Socket;
+using utils::network::Socket;
 using utils::network::INetworkUtils;
 using utils::network::StatusCode;
+
+} // namespace
+
+namespace http {
 
 HttpConnection::HttpConnection(Socket socket, std::shared_ptr<INetworkUtils> network_utils)
     : m_socket(std::move(socket))
@@ -30,15 +35,15 @@ HttpConnection::operator=(HttpConnection&& other) noexcept
 }
 
 StatusCode
-HttpConnection::sendBytes(std::stringstream& bytes) const
+HttpConnection::sendBytes(utils::network::BytesView bytes) const
 {
-    return m_network_utils->sendBytes(*m_socket, bytes);
+    return m_network_utils->sendBytes(m_socket, bytes);
 }
 
-std::stringstream
+std::optional<utils::network::Bytes>
 HttpConnection::receiveBytes() const
 {
-    return m_network_utils->receiveBytes(*m_socket);
+    return m_network_utils->receiveBytes(m_socket);
 }
 
 } // namespace http

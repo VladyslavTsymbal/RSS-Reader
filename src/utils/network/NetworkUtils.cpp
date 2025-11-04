@@ -1,4 +1,5 @@
 #include "utils/network/NetworkUtils.hpp"
+#include "utils/network/Types.hpp"
 
 namespace utils::network {
 
@@ -7,8 +8,8 @@ NetworkUtils::NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper)
 {
 }
 
-static int
-closeSock(int* socket_ptr)
+int
+closeSocket(int* socket_ptr)
 {
     if (socket_ptr == nullptr)
     {
@@ -37,7 +38,7 @@ NetworkUtils::createSocket(const addrinfo* addr)
             }
 
             *socket_ptr = socket_fd;
-            return Socket(socket_ptr, closeSock);
+            return Socket(socket_ptr, closeSocket);
         }
     }
 
@@ -45,11 +46,11 @@ NetworkUtils::createSocket(const addrinfo* addr)
 }
 
 StatusCode
-NetworkUtils::connectSocket(const int socket, const addrinfo* info)
+NetworkUtils::connectSocket(const Socket& socket, const addrinfo* info)
 {
     for (auto it = info; it != nullptr; it = it->ai_next)
     {
-        if (m_syscalls_wrapper->connectSyscall(socket, it->ai_addr, it->ai_addrlen) == 0)
+        if (m_syscalls_wrapper->connectSyscall(*socket, it->ai_addr, it->ai_addrlen) == 0)
         {
             return StatusCode::OK;
         }
@@ -74,55 +75,48 @@ NetworkUtils::getAddrInfo(std::string_view ip, std::string_view port, const addr
 }
 
 StatusCode
-NetworkUtils::sendBytes(const int socket_fd, std::istream& bytes) const
+NetworkUtils::sendBytes(const Socket& socket_fd, BytesView bytes) const
 {
-    bytes.seekg(0, std::ios::end);
-
-    const auto request_size = bytes.tellg();
-    auto bytes_to_send = request_size;
-
-    bytes.seekg(0, std::ios::beg);
-
-    constexpr auto BUF_SIZE = 1024;
-    while (bytes_to_send != 0)
+    while (!bytes.empty())
     {
-        char buffer[BUF_SIZE]{0};
-        auto buffer_pos = request_size - bytes_to_send;
-        bytes.seekg(buffer_pos);
-        bytes.read(buffer, bytes_to_send);
-
-        auto bytes_sent = send(socket_fd, static_cast<const void*>(buffer), bytes_to_send, 0);
-
+        auto bytes_sent = ::send(*socket_fd, bytes.data(), bytes.size(), 0);
         if (bytes_sent == -1)
         {
             return StatusCode::FAIL;
         }
 
-        bytes_to_send -= bytes_sent;
+        bytes = bytes.subspan(bytes_sent);
     }
 
     return StatusCode::OK;
 }
 
-std::stringstream
-NetworkUtils::receiveBytes(const int socket_fd) const
+std::optional<Bytes>
+NetworkUtils::receiveBytes(const Socket& socket_fd) const
 {
-    std::stringstream sstream;
-    constexpr auto BUF_SIZE = 1024;
-    char buf[BUF_SIZE];
-    int bytes_received = 0;
+    constexpr size_t buffer_size = 4096;
+    std::array<std::byte, buffer_size> buffer;
+    std::vector<std::byte> bytes;
+    bytes.reserve(buffer_size);
 
-    while ((bytes_received = recv(socket_fd, static_cast<void*>(buf), BUF_SIZE, 0)) > 0)
+    while (true)
     {
-        if (bytes_received == -1)
+        auto received_bytes = ::recv(*socket_fd, buffer.data(), buffer.size(), 0);
+        if (received_bytes == 0)
         {
-            return {};
+            // Connection closed by peer
+            break;
+        }
+        else if (received_bytes == -1)
+        {
+            // Error happened
+            return std::nullopt;
         }
 
-        sstream.write(buf, bytes_received);
+        bytes.insert(std::end(bytes), std::begin(buffer), std::begin(buffer) + received_bytes);
     }
 
-    return sstream;
+    return bytes;
 }
 
 } // namespace utils::network

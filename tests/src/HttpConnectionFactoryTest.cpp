@@ -1,6 +1,7 @@
 #include "MockNetworkUtils.hpp"
 #include "http/HttpConnectionFactory.hpp"
 #include "http/IHttpConnection.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
 
@@ -24,28 +25,6 @@ struct HttpConnectionFactoryTest : public Test
     std::unique_ptr<HttpConnectionFactory> connection_factory;
     std::shared_ptr<StrictMock<MockNetworkUtils>> network_utils;
 };
-
-Socket
-createSocketWithFd(const int fd)
-{
-    int* sock_fd = new int;
-    if (sock_fd == nullptr)
-    {
-        return nullptr;
-    }
-
-    *sock_fd = fd;
-    Socket socket(sock_fd, [](int* sock_fd) -> int {
-        if (sock_fd != nullptr)
-        {
-            delete sock_fd;
-        }
-
-        return 0;
-    });
-
-    return socket;
-}
 
 TEST_F(HttpConnectionFactoryTest, when_addrinfo_returns_nullptr_then_connection_is_nullptr)
 {

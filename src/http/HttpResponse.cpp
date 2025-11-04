@@ -21,12 +21,10 @@ findBeginningOfBody(const std::vector<std::string>& vec)
 }
 
 std::vector<std::string>
-splitResponseByControlSequence(std::stringstream& response)
+splitResponseByControlSequence(std::string response)
 {
-    std::string data = response.str();
-
     std::vector<std::string> splitted_response;
-    boost::algorithm::split_regex(splitted_response, data, boost::regex("\r\n"));
+    boost::algorithm::split_regex(splitted_response, response, boost::regex("\r\n"));
 
     return splitted_response;
 }
@@ -105,10 +103,13 @@ HttpResponse::parseBody(std::vector<std::string>& vec)
     vec.pop_back();
 }
 
-HttpResponse::HttpResponse(std::stringstream response)
+HttpResponse::HttpResponse(std::string response)
 {
-    auto response_splitted_in_strings = splitResponseByControlSequence(response);
-    parseResponse(response_splitted_in_strings);
+    if (!response.empty())
+    {
+        auto response_splitted_in_strings = splitResponseByControlSequence(std::move(response));
+        parseResponse(response_splitted_in_strings);
+    }
 }
 
 const std::string&

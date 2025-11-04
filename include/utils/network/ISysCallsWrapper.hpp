@@ -13,7 +13,7 @@ public:
     socketSyscall(int domain, int type, int protocol) = 0;
 
     virtual int
-    connectSyscall(int fd, const sockaddr* addr, socklen_t len) = 0;
+    connectSyscall(const int fd, const sockaddr* addr, socklen_t len) = 0;
 
     virtual int
     getaddrinfoSyscall(

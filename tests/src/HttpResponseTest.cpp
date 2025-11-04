@@ -43,7 +43,7 @@ TEST(HttpResponseTest, when_response_has_okay_status_code_then_response_is_succe
 {
     std::stringstream ss;
     ss << okay_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_TRUE(response.isSuccessful());
     EXPECT_EQ(response.getStatusCode(), 200);
@@ -53,7 +53,7 @@ TEST(HttpResponseTest, when_response_has_not_okay_status_code_then_response_is_n
 {
     std::stringstream ss;
     ss << forbidden_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_FALSE(response.isSuccessful());
     EXPECT_EQ(response.getStatusCode(), 403);
@@ -63,7 +63,7 @@ TEST(HttpResponseTest, when_present_header_data_asked_by_key_then_data_returned)
 {
     std::stringstream ss;
     ss << forbidden_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_NE(response.getHeader("Date"), std::nullopt);
     EXPECT_EQ(response.getHeader("Date"), "Tue, 02 Apr 2024 12:00:00 GMT");
@@ -73,7 +73,7 @@ TEST(HttpResponseTest, when_not_present_header_data_asked_by_key_then_nullopt_re
 {
     std::stringstream ss;
     ss << forbidden_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_EQ(response.getHeader("Content-Type"), std::nullopt);
 }
@@ -82,7 +82,7 @@ TEST(HttpResponseTest, when_get_description_called_then_actual_description_retur
 {
     std::stringstream ss;
     ss << no_content_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_EQ(response.getDescription(), "No Content");
 }
@@ -91,7 +91,7 @@ TEST(HttpResponseTest, when_response_has_no_body_then_get_body_returns_empty_str
 {
     std::stringstream ss;
     ss << no_content_response;
-    http::HttpResponse response(std::move(ss));
+    http::HttpResponse response(ss.str());
 
     EXPECT_TRUE(response.getBody().empty());
 }

@@ -6,9 +6,11 @@
 #include <utility>       // for move, pair
 #include "utils/Log.hpp" // for LOG_ERROR
 
-namespace http {
-
+namespace {
 constexpr std::string_view LOG_TAG = "HttpRequest";
+}
+
+namespace http {
 
 std::optional<std::string>
 requestMethodToString(HttpRequest::HttpRequestMethod request_method)

@@ -4,14 +4,16 @@
 #include <unordered_map>
 #include <vector>
 
-namespace http {
-
+namespace {
 using HttpHeaders = std::unordered_map<std::string, std::string>;
+}
+
+namespace http {
 
 class HttpResponse
 {
 public:
-    HttpResponse(std::stringstream response);
+    HttpResponse(std::string response);
 
     const std::string&
     getBody() const;

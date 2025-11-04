@@ -2,6 +2,7 @@
 
 #include "http/IHttpConnection.hpp"
 #include "utils/network/INetworkUtils.hpp"
+#include "utils/network/Types.hpp"
 
 namespace http {
 
@@ -20,9 +21,9 @@ public:
     operator=(HttpConnection&& other) noexcept;
 
     utils::network::StatusCode
-    sendBytes(std::stringstream& bytes) const override;
+    sendBytes(utils::network::BytesView bytes) const override;
 
-    std::stringstream
+    std::optional<utils::network::Bytes>
     receiveBytes() const override;
 
 private:

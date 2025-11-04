@@ -5,6 +5,9 @@
 
 namespace utils::network {
 
+int
+closeSocket(int* socket);
+
 class NetworkUtils : public INetworkUtils
 {
 public:
@@ -16,16 +19,16 @@ public:
     createSocket(const addrinfo* addr) override;
 
     StatusCode
-    connectSocket(const int socket, const addrinfo* info) override;
+    connectSocket(const Socket& socket, const addrinfo* info) override;
 
     std::expected<AddrInfoPtr, int>
     getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) override;
 
     StatusCode
-    sendBytes(const int socket_fd, std::istream& bytes) const override;
+    sendBytes(const Socket& socket_fd, BytesView bytes) const override;
 
-    std::stringstream
-    receiveBytes(const int socket_fd) const override;
+    std::optional<Bytes>
+    receiveBytes(const Socket& socket_fd) const override;
 
 protected:
     std::shared_ptr<ISysCallsWrapper> m_syscalls_wrapper = std::make_shared<SysCallsWrapper>();

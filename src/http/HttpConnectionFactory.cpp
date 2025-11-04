@@ -3,12 +3,20 @@
 #include "utils/network/INetworkUtils.hpp"
 #include "utils/network/AddrInfoBuilder.hpp"
 #include "utils/Log.hpp"
+#include "utils/network/StatusCode.hpp"
 
-namespace http {
+namespace {
 
 constexpr std::string_view LOG_TAG = "HttpConnectionFactory";
 
-using namespace utils::network;
+using utils::network::INetworkUtils;
+using utils::network::AddrInfoBuilder;
+using utils::network::StatusCode;
+using utils::network::Socket;
+
+} // namespace
+
+namespace http {
 
 HttpConnectionFactory::HttpConnectionFactory(std::shared_ptr<INetworkUtils> network_utils)
     : m_network_utils(std::move(network_utils))
@@ -23,14 +31,14 @@ HttpConnectionFactory::createConnection(std::string_view ip, const unsigned int 
                                .setSockType(AddrInfoBuilder::SockType::TCP)
                                .build();
 
-    const auto ptrOrErrorCode = m_network_utils->getAddrInfo(ip, std::to_string(port), &hints);
-    if (!ptrOrErrorCode.has_value())
+    auto addr_info = m_network_utils->getAddrInfo(ip, std::to_string(port), &hints);
+    if (!addr_info)
     {
-        LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(ptrOrErrorCode.error()));
+        LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(addr_info.error()));
         return nullptr;
     }
 
-    Socket socket = m_network_utils->createSocket(ptrOrErrorCode.value().get());
+    Socket socket = m_network_utils->createSocket(addr_info.value().get());
     if (socket == nullptr)
     {
         LOG_ERROR(LOG_TAG, "createSocket failed: {}", strerror(errno));
@@ -38,7 +46,7 @@ HttpConnectionFactory::createConnection(std::string_view ip, const unsigned int 
     }
 
     LOG_INFO(LOG_TAG, "Connecting to: {}", ip);
-    const auto is_connected = m_network_utils->connectSocket(*socket, ptrOrErrorCode.value().get());
+    const auto is_connected = m_network_utils->connectSocket(socket, addr_info.value().get());
     if (is_connected == StatusCode::FAIL)
     {
         LOG_ERROR(LOG_TAG, "connectSocket failed: {}", strerror(errno));
@@ -46,6 +54,12 @@ HttpConnectionFactory::createConnection(std::string_view ip, const unsigned int 
     }
 
     LOG_INFO(LOG_TAG, "Connected successfully ({})", ip);
+    return std::make_unique<HttpConnection>(std::move(socket), m_network_utils);
+}
+
+std::unique_ptr<IHttpConnection>
+HttpConnectionFactory::createConnection(Socket socket)
+{
     return std::make_unique<HttpConnection>(std::move(socket), m_network_utils);
 }
 

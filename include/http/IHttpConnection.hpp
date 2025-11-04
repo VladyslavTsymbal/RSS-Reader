@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/network/StatusCode.hpp"
+#include "utils/network/Types.hpp"
 
 #include <sstream>
 
@@ -17,9 +18,9 @@ public:
     operator=(const IHttpConnection&) = delete;
 
     virtual utils::network::StatusCode
-    sendBytes(std::stringstream& bytes) const = 0;
+    sendBytes(utils::network::BytesView bytes) const = 0;
 
-    virtual std::stringstream
+    virtual std::optional<utils::network::Bytes>
     receiveBytes() const = 0;
 
 protected:

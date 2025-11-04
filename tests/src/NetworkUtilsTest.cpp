@@ -1,7 +1,6 @@
 #include "MockSysCallsWrapper.hpp"
 #include "utils/network/NetworkUtils.hpp"
-
-#include <cstring>
+#include "TestHelpers.hpp"
 
 namespace {
 
@@ -19,52 +18,15 @@ struct NetworkUtilsTest : public Test
     {
         syscalls_wrapper = std::make_shared<StrictMock<MockSysCallsWrapper>>();
         network_utils = std::make_unique<NetworkUtils>(syscalls_wrapper);
+        invalid_socket = createSocketWithFd(INVALID_SOCK_FD);
+        valid_socket = createSocketWithFd(VALID_SOCK_FD);
     }
 
     std::shared_ptr<StrictMock<MockSysCallsWrapper>> syscalls_wrapper;
     std::unique_ptr<NetworkUtils> network_utils;
+    utils::network::Socket invalid_socket;
+    utils::network::Socket valid_socket;
 };
-
-addrinfo*
-createAddrinfoList(const size_t size)
-{
-    addrinfo* head = new addrinfo;
-    std::memset(head, 0, sizeof(addrinfo));
-    addrinfo* temp = head;
-
-    for (auto i = 0; i < size - 1; ++i)
-    {
-        temp->ai_next = new addrinfo;
-        temp = temp->ai_next;
-        std::memset(temp, 0, sizeof(addrinfo));
-    }
-
-    return head;
-}
-
-void
-deleteAddrinfoList(addrinfo* list)
-{
-    if (list == nullptr)
-    {
-        return;
-    }
-
-    addrinfo* head = list;
-    addrinfo* next = head->ai_next;
-
-    while (next != nullptr)
-    {
-        delete head;
-        head = next;
-        next = head->ai_next;
-    }
-
-    if (head)
-    {
-        delete head;
-    }
-}
 
 TEST_F(NetworkUtilsTest, when_addrinfo_is_nullptr_then_socket_syscall_is_never_called)
 {
@@ -129,7 +91,7 @@ TEST_F(NetworkUtilsTest, when_socket_syscall_successful_then_other_addrinfo_entr
 TEST_F(NetworkUtilsTest, when_addrinfo_is_nullptr_then_connect_syscall_is_never_called)
 {
     EXPECT_CALL(*syscalls_wrapper, connectSyscall(_, _, _)).Times(0);
-    const auto status = network_utils->connectSocket(VALID_SOCK_FD, nullptr);
+    const auto status = network_utils->connectSocket(valid_socket, nullptr);
     ASSERT_EQ(status, utils::network::StatusCode::FAIL);
 }
 
@@ -144,7 +106,7 @@ TEST_F(NetworkUtilsTest, when_connect_syscall_repeatedly_fails_then_fail_status_
             .Times(list_size)
             .WillRepeatedly(Return(-1));
 
-    const auto status = network_utils->connectSocket(VALID_SOCK_FD, info);
+    const auto status = network_utils->connectSocket(valid_socket, info);
     EXPECT_EQ(status, utils::network::StatusCode::FAIL);
 
     // Cleanup linked list
@@ -158,7 +120,7 @@ TEST_F(NetworkUtilsTest, when_connect_syscall_successful_then_status_code_is_ok)
 
     EXPECT_CALL(*syscalls_wrapper, connectSyscall(_, _, _)).WillOnce(Return(0));
 
-    const auto status = network_utils->connectSocket(VALID_SOCK_FD, info);
+    const auto status = network_utils->connectSocket(valid_socket, info);
     EXPECT_EQ(status, utils::network::StatusCode::OK);
 
     delete info;
@@ -177,7 +139,7 @@ TEST_F(NetworkUtilsTest, when_connect_syscall_successful_then_other_addrinfo_ent
             .WillOnce(Return(-1))
             .WillOnce(Return(0));
 
-    const auto status = network_utils->connectSocket(VALID_SOCK_FD, info);
+    const auto status = network_utils->connectSocket(valid_socket, info);
     EXPECT_EQ(status, utils::network::StatusCode::OK);
 
     // Cleanup linked list
