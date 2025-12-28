@@ -1,12 +1,12 @@
 #pragma once
 
 #include "utils/network/INetworkUtils.hpp"
+#include "utils/network/StatusCode.hpp"
 #include "utils/network/SysCallsWrapper.hpp"
+#include "utils/network/TcpSocket.hpp"
+#include "utils/network/Types.hpp"
 
 namespace utils::network {
-
-int
-closeSocket(int* socket);
 
 class NetworkUtils : public INetworkUtils
 {
@@ -15,20 +15,20 @@ public:
 
     NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper);
 
-    Socket
-    createSocket(const addrinfo* addr) override;
+    std::optional<TcpSocket>
+    createTcpSocket(const addrinfo* addr) override;
 
     StatusCode
-    connectSocket(const Socket& socket, const addrinfo* info) override;
+    connectSocket(const TcpSocket& socket, const addrinfo* info) override;
 
     std::expected<AddrInfoPtr, int>
     getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) override;
 
     StatusCode
-    sendBytes(const Socket& socket_fd, BytesView bytes) const override;
+    sendBytes(const TcpSocket& socket, BytesView bytes) const override;
 
-    std::optional<Bytes>
-    receiveBytes(const Socket& socket_fd) const override;
+    std::expected<Bytes, StatusCode>
+    receiveBytes(const TcpSocket& socket) const override;
 
 protected:
     std::shared_ptr<ISysCallsWrapper> m_syscalls_wrapper = std::make_shared<SysCallsWrapper>();

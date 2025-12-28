@@ -2,7 +2,8 @@
 
 #include "http/IHttpConnection.hpp"
 #include "utils/network/INetworkUtils.hpp"
-#include "utils/network/Types.hpp"
+#include "utils/network/StatusCode.hpp"
+#include "utils/network/TcpSocket.hpp"
 
 namespace http {
 
@@ -12,7 +13,7 @@ public:
     HttpConnection() = delete;
 
     HttpConnection(
-            utils::network::Socket socket,
+            utils::network::TcpSocket socket,
             std::shared_ptr<utils::network::INetworkUtils> network_utils);
 
     HttpConnection(HttpConnection&& other) noexcept;
@@ -21,13 +22,19 @@ public:
     operator=(HttpConnection&& other) noexcept;
 
     utils::network::StatusCode
-    sendBytes(utils::network::BytesView bytes) const override;
+    sendData(std::string_view data) const override;
 
-    std::optional<utils::network::Bytes>
-    receiveBytes() const override;
+    std::expected<std::string, utils::network::StatusCode>
+    receiveData() const override;
+
+    bool
+    isClosed() const override;
+
+    void
+    closeConnection() override;
 
 private:
-    utils::network::Socket m_socket;
+    utils::network::TcpSocket m_socket;
     std::shared_ptr<utils::network::INetworkUtils> m_network_utils;
 };
 

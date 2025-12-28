@@ -21,10 +21,10 @@ public:
     HttpRequestMethod
     getRequestMethod() const;
 
-    const std::string&
+    std::string_view
     getUrl() const;
 
-    const std::string&
+    std::string_view
     getHost() const;
 
 private:
@@ -56,8 +56,5 @@ private:
     std::string m_url;
     HttpRequest::HttpRequestMethod m_method = HttpRequest::HttpRequestMethod::GET;
 };
-
-std::optional<std::string>
-requestMethodToString(HttpRequest::HttpRequestMethod request_method);
 
 } // namespace http

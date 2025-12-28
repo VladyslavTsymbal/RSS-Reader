@@ -1,5 +1,7 @@
 #include "utils/network/NetworkUtils.hpp"
-#include "utils/network/Types.hpp"
+#include "utils/network/StatusCode.hpp"
+#include "utils/network/TcpSocket.hpp"
+#include <cstring>
 
 namespace utils::network {
 
@@ -8,19 +10,8 @@ NetworkUtils::NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper)
 {
 }
 
-int
-closeSocket(int* socket_ptr)
-{
-    if (socket_ptr == nullptr)
-    {
-        return EBADF;
-    }
-
-    return close(*socket_ptr);
-}
-
-Socket
-NetworkUtils::createSocket(const addrinfo* addr)
+std::optional<TcpSocket>
+NetworkUtils::createTcpSocket(const addrinfo* addr)
 {
     int socket_fd = -1;
 
@@ -31,26 +22,19 @@ NetworkUtils::createSocket(const addrinfo* addr)
 
         if (socket_fd >= 0)
         {
-            int* socket_ptr = new int;
-            if (socket_ptr == nullptr)
-            {
-                return nullptr;
-            }
-
-            *socket_ptr = socket_fd;
-            return Socket(socket_ptr, closeSocket);
+            return TcpSocket(Socket(socket_fd));
         }
     }
 
-    return nullptr;
+    return std::nullopt;
 }
 
 StatusCode
-NetworkUtils::connectSocket(const Socket& socket, const addrinfo* info)
+NetworkUtils::connectSocket(const TcpSocket& socket, const addrinfo* info)
 {
     for (auto it = info; it != nullptr; it = it->ai_next)
     {
-        if (m_syscalls_wrapper->connectSyscall(*socket, it->ai_addr, it->ai_addrlen) == 0)
+        if (m_syscalls_wrapper->connectSyscall(socket.fd(), it->ai_addr, it->ai_addrlen) == 0)
         {
             return StatusCode::OK;
         }
@@ -75,14 +59,14 @@ NetworkUtils::getAddrInfo(std::string_view ip, std::string_view port, const addr
 }
 
 StatusCode
-NetworkUtils::sendBytes(const Socket& socket_fd, BytesView bytes) const
+NetworkUtils::sendBytes(const TcpSocket& socket, BytesView bytes) const
 {
     while (!bytes.empty())
     {
-        auto bytes_sent = ::send(*socket_fd, bytes.data(), bytes.size(), 0);
+        auto bytes_sent = ::send(socket.fd(), bytes.data(), bytes.size(), 0);
         if (bytes_sent == -1)
         {
-            return StatusCode::FAIL;
+            return StatusCode::WRITE_ERROR;
         }
 
         bytes = bytes.subspan(bytes_sent);
@@ -91,30 +75,26 @@ NetworkUtils::sendBytes(const Socket& socket_fd, BytesView bytes) const
     return StatusCode::OK;
 }
 
-std::optional<Bytes>
-NetworkUtils::receiveBytes(const Socket& socket_fd) const
+std::expected<Bytes, StatusCode>
+NetworkUtils::receiveBytes(const TcpSocket& socket) const
 {
     constexpr size_t buffer_size = 4096;
     std::array<std::byte, buffer_size> buffer;
-    std::vector<std::byte> bytes;
-    bytes.reserve(buffer_size);
 
-    while (true)
+    ssize_t received_bytes = 0;
+    received_bytes = ::recv(socket.fd(), buffer.data(), buffer.size(), 0);
+    if (received_bytes == 0)
     {
-        auto received_bytes = ::recv(*socket_fd, buffer.data(), buffer.size(), 0);
-        if (received_bytes == 0)
-        {
-            // Connection closed by peer
-            break;
-        }
-        else if (received_bytes == -1)
-        {
-            // Error happened
-            return std::nullopt;
-        }
-
-        bytes.insert(std::end(bytes), std::begin(buffer), std::begin(buffer) + received_bytes);
+        return std::unexpected(StatusCode::CLOSED_BY_PEER);
     }
+    else if (received_bytes == -1)
+    {
+        return std::unexpected(StatusCode::READ_ERROR);
+    }
+
+    std::vector<std::byte> bytes;
+    bytes.resize(received_bytes);
+    std::memcpy(bytes.data(), buffer.data(), received_bytes);
 
     return bytes;
 }

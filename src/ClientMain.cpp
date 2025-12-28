@@ -16,16 +16,9 @@ main()
     using namespace http;
 
     auto syscall_wrappers = std::make_shared<utils::network::SysCallsWrapper>();
-    auto network_utils = std::make_shared<utils::network::NetworkUtils>(syscall_wrappers);
-
-    HttpConnectionFactory connection_factory(network_utils);
-    auto connection = connection_factory.createConnection("127.0.0.1", 8080);
-
-    if (!connection)
-    {
-        LOG_ERROR(LOG_TAG, "Failed to create connection.");
-        return 1;
-    }
+    auto network_utils =
+            std::make_shared<utils::network::NetworkUtils>(std::move(syscall_wrappers));
+    auto connection_factory = std::make_shared<HttpConnectionFactory>(std::move(network_utils));
 
     HttpRequest request = HttpRequestBuilder()
                                   .setHost("127.0.0.1")
@@ -33,15 +26,23 @@ main()
                                   .setRequestUrl("/tests/feed.xml")
                                   .build();
 
-    HttpClient http_client;
-    const auto response = http_client.sendRequest(*connection, request);
+    HttpClient http_client(std::move(connection_factory));
+    const auto response = http_client.sendRequest(request);
     if (!response)
     {
         LOG_ERROR(LOG_TAG, "Failed to get response from server!");
         return 1;
     }
 
-    LOG_INFO(LOG_TAG, "Response data: \n{}", response->getBody());
+    auto body = response->getBody();
+    if (body)
+    {
+        LOG_INFO(LOG_TAG, "Response data: \n{}", *body);
+    }
+    else
+    {
+        LOG_WARN(LOG_TAG, "Body is not present in the response");
+    }
 
     return 0;
 }

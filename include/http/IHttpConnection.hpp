@@ -1,11 +1,13 @@
 #pragma once
 
 #include "utils/network/StatusCode.hpp"
-#include "utils/network/Types.hpp"
 
-#include <sstream>
+#include <expected>
+#include <string_view>
 
 namespace http {
+
+class HttpRequest;
 
 class IHttpConnection
 {
@@ -17,11 +19,16 @@ public:
     IHttpConnection&
     operator=(const IHttpConnection&) = delete;
 
-    virtual utils::network::StatusCode
-    sendBytes(utils::network::BytesView bytes) const = 0;
+    virtual utils::network::StatusCode sendData(std::string_view) const = 0;
 
-    virtual std::optional<utils::network::Bytes>
-    receiveBytes() const = 0;
+    virtual std::expected<std::string, utils::network::StatusCode>
+    receiveData() const = 0;
+
+    virtual bool
+    isClosed() const = 0;
+
+    virtual void
+    closeConnection() = 0;
 
 protected:
     IHttpConnection() = default;

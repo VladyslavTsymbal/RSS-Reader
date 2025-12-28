@@ -1,54 +1,53 @@
 #pragma once
 
-#include <sstream>
-#include <unordered_map>
-#include <vector>
+#include "http/HttpHelpers.hpp"
 
-namespace {
-using HttpHeaders = std::unordered_map<std::string, std::string>;
-}
+#include <sstream>
+#include <vector>
+#include <string_view>
+#include <optional>
 
 namespace http {
 
 class HttpResponse
 {
 public:
+    struct StatusLine
+    {
+        std::string m_description;
+        std::string m_http_version;
+        int m_status_code{};
+    };
+
     HttpResponse(std::string response);
 
-    const std::string&
+    std::optional<std::string_view>
     getBody() const;
 
-    bool
-    isSuccessful() const;
+    std::optional<std::string_view>
+    getHeader(std::string_view key) const;
 
-    std::optional<std::string>
-    getHeader(const std::string& key) const;
-
-    int
+    std::optional<int>
     getStatusCode() const;
 
-    const std::string&
+    std::optional<std::string_view>
     getDescription() const;
 
 private:
     void
-    parseResponse(std::vector<std::string>& vec);
+    parseResponse(std::string response);
 
-    void
-    parseStatusLine(std::vector<std::string>& vec);
+    std::optional<StatusLine>
+    parseStatusLine(std::string_view sv);
 
-    void
-    parseHeaders(std::vector<std::string>& vec);
-
-    void
-    parseBody(std::vector<std::string>& vec);
+    std::optional<size_t>
+    getContentLengthValue() const;
 
 private:
     HttpHeaders m_headers;
-    std::string m_body;
-    std::string m_description;
-    std::string m_http_version;
-    int m_status_code{-1};
+    std::optional<StatusLine> m_status_line;
+    // TODO: Body could be binary data
+    std::optional<std::string> m_body;
 };
 
 } // namespace http

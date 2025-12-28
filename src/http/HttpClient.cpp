@@ -1,4 +1,5 @@
 #include "http/HttpClient.hpp"
+#include "http/HttpConnectionFactory.hpp"
 #include "http/HttpRequest.hpp"         // for HttpRequest, requestMethodTo...
 #include "http/HttpResponse.hpp"        // for HttpResponse
 #include "http/IHttpConnection.hpp"     // for IHttpConnection
@@ -10,10 +11,19 @@
 #include <string_view> // for string_view
 
 namespace {
+
 constexpr std::string_view LOG_TAG = "HttpClient";
-}
+using utils::network::StatusCode;
+
+} // namespace
 
 namespace http {
+
+HttpClient::HttpClient(std::shared_ptr<HttpConnectionFactory> factory)
+    : m_factory(std::move(factory))
+{
+    assert(m_factory);
+}
 
 static std::optional<std::string>
 prepareHttpRequest(const HttpRequest& request)
@@ -25,15 +35,21 @@ prepareHttpRequest(const HttpRequest& request)
     }
 
     return std::format(
-            "{} {} HTTP/1.1\x0D\x0AHost: {}\x0D\x0A\x43onnection: Close\x0D\x0A\x0D\x0A",
+            "{1} {2} HTTP/1.1{0}"
+            "Host: {3}{0}"
+            "Content-Length: 0{0}"
+            "Connection: Close{0}"
+            "{0}",
+            CRLF,
             *request_method,
             request.getUrl(),
             request.getHost());
 }
 
 std::optional<HttpResponse>
-HttpClient::sendRequest(const IHttpConnection& connection, const HttpRequest& request)
+HttpClient::sendRequest(const HttpRequest& request)
 {
+    using utils::network::statusCodeToError;
     LOG_INFO(LOG_TAG, "Preparing http request.");
 
     auto request_string = prepareHttpRequest(request);
@@ -46,32 +62,32 @@ HttpClient::sendRequest(const IHttpConnection& connection, const HttpRequest& re
     LOG_INFO(LOG_TAG, "Sending the http request.");
     LOG_DEBUG(LOG_TAG, "Request content:\n{}\n", *request_string);
 
-    auto request_as_bytes = std::as_bytes(std::span(*request_string));
-    utils::network::StatusCode status = connection.sendBytes(request_as_bytes);
-
-    if (status == utils::network::StatusCode::FAIL)
+    auto connection = m_factory->createConnection("127.0.0.1", 8080);
+    const StatusCode status = connection->sendData(*request_string);
+    if (status != StatusCode::OK)
     {
-        LOG_ERROR(LOG_TAG, "Failed to sendBytes.");
+        LOG_ERROR(LOG_TAG, statusCodeToError(status));
         return std::nullopt;
     }
 
     LOG_INFO(LOG_TAG, "Receiving response from the server.")
-    auto bytes = connection.receiveBytes();
-    if (!bytes)
+    auto response = connection->receiveData();
+    if (!response)
     {
-        LOG_ERROR(LOG_TAG, "Failed to receiveBytes.");
+        const StatusCode error = response.error();
+        LOG_ERROR(LOG_TAG, statusCodeToError(error));
         return std::nullopt;
     }
+    connection->closeConnection();
 
     LOG_INFO(LOG_TAG, "Creating http response.")
-    std::string response_string(reinterpret_cast<const char*>(bytes->data()), bytes->size());
-    if (response_string.empty())
+    if (response->empty())
     {
         LOG_WARN(LOG_TAG, "Response from server is empty.")
         return std::nullopt;
     }
 
-    return HttpResponse(std::move(response_string));
+    return HttpResponse(std::move(*response));
 }
 
 } // namespace http

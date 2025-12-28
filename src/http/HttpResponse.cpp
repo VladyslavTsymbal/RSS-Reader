@@ -1,144 +1,156 @@
 #include "http/HttpResponse.hpp"
+#include "http/HttpHelpers.hpp"
 
 #include <algorithm>
-#include <boost/algorithm/string_regex.hpp>
 #include <iterator>
 #include <optional>
 
 namespace http {
 
-auto
-findBeginningOfBody(const std::vector<std::string>& vec)
-{
-    return std::find_if(std::begin(vec), std::end(vec), [](const auto& str) {
-        if (str.empty())
-        {
-            return true;
-        }
-
-        return false;
-    });
-}
-
-std::vector<std::string>
-splitResponseByControlSequence(std::string response)
-{
-    std::vector<std::string> splitted_response;
-    boost::algorithm::split_regex(splitted_response, response, boost::regex("\r\n"));
-
-    return splitted_response;
-}
-
-bool
-HttpResponse::isSuccessful() const
-{
-    return (m_status_code >= 200 && m_status_code <= 208) ? true : false;
-}
-
-void
-HttpResponse::parseResponse(std::vector<std::string>& vec)
-{
-    // Move from the end to the beggining in order to avoid
-    // extra swaps inside of the vector after pop.
-    parseBody(vec);
-    parseHeaders(vec);
-    parseStatusLine(vec);
-}
-
-void
-HttpResponse::parseStatusLine(std::vector<std::string>& vec)
-{
-    if (!vec.empty())
-    {
-        std::string status_line = vec.back();
-        vec.pop_back();
-
-        boost::regex status_line_regex("HTTP\\/([0-9]\\.[0-9])\\s([1-5][0-9]{2})\\s(.*)");
-        // This will hold the results
-        boost::match_results<std::string::const_iterator> matches;
-
-        std::string::const_iterator start = status_line.begin();
-        std::string::const_iterator end = status_line.end();
-
-        const bool found = boost::regex_search(start, end, matches, status_line_regex);
-        if (found)
-        {
-            m_http_version = matches[1];
-            m_status_code = std::stoi(matches[2], nullptr);
-            m_description = matches[3];
-        }
-    }
-}
-
-void
-HttpResponse::parseHeaders(std::vector<std::string>& vec)
-{
-    while (!vec.empty())
-    {
-        std::vector<std::string> splitted_header;
-        boost::algorithm::split_regex(splitted_header, vec.back(), boost::regex(": "));
-
-        if (splitted_header.size() != 2)
-        {
-            // We reached status line, stop there
-            break;
-        }
-
-        const auto key = splitted_header[0];
-        const auto value = splitted_header[1];
-        m_headers[key] = value;
-        vec.pop_back();
-    }
-}
-
-void
-HttpResponse::parseBody(std::vector<std::string>& vec)
-{
-    // IDK, but `boost::split_regex` adds new empty line in case
-    // response does not have a body. So, I dont need to check if
-    // body present or not and can blindly remove the "\r\n" separator.
-    m_body = vec.back();
-    vec.pop_back();
-    // Drop "\r\n"
-    vec.pop_back();
-}
-
 HttpResponse::HttpResponse(std::string response)
 {
     if (!response.empty())
     {
-        auto response_splitted_in_strings = splitResponseByControlSequence(std::move(response));
-        parseResponse(response_splitted_in_strings);
+        parseResponse(std::move(response));
     }
 }
 
-const std::string&
+void
+HttpResponse::parseResponse(std::string response)
+{
+    const auto end_of_headers_pos = findEndOfHeaders(response);
+    if (end_of_headers_pos != std::string_view::npos)
+    {
+        // Append 4 symbols (end_of_header) \r\n\r\n at the end of the string_view
+        // in order to be able successfully find the very last header.
+        // Without this, string view ends just before the \r\n\r\n sequence.
+        std::string_view headers_sv(response.data(), end_of_headers_pos + 4);
+        // Parse status line
+        m_status_line = parseStatusLine(headers_sv);
+
+        // If status line is present, it should be skipped.
+        if (m_status_line)
+        {
+            const auto first_crlf_pos = headers_sv.find(CRLF);
+            if (first_crlf_pos != std::string_view::npos)
+            {
+                // Remove at the beginning N chars + (\r\n).
+                headers_sv.remove_prefix(first_crlf_pos + CRLF.size());
+            }
+        }
+        // Save headers.
+        m_headers = parseHeaders(headers_sv);
+    }
+
+    // Save response body.
+    auto content_length = getContentLengthValue();
+    if (content_length && *content_length > 0)
+    {
+        // Make string_view from the `end_of_headers_pos` + `\r\n\r\n`.
+        const size_t body_offset = end_of_headers_pos + 4;
+        if (body_offset + *content_length <= response.size())
+        {
+            std::string_view body_sv(response.data() + body_offset, *content_length);
+            m_body = std::string(body_sv);
+        }
+    }
+}
+
+std::optional<HttpResponse::StatusLine>
+HttpResponse::parseStatusLine(std::string_view sv)
+{
+    // Expecting(example): HTTP/1.1 200 OK\r\n
+    auto crlf = sv.find(CRLF);
+    if (crlf != std::string_view::npos)
+    {
+        sv = sv.substr(0, crlf);
+    }
+
+    if (!sv.starts_with("HTTP/"))
+    {
+        return std::nullopt;
+    }
+
+    auto first_space = sv.find(' ');
+    if (first_space == std::string_view::npos)
+    {
+        return std::nullopt;
+    }
+
+    auto second_space = sv.find(' ', first_space + 1);
+    if (second_space == std::string_view::npos)
+    {
+        return std::nullopt;
+    }
+
+    StatusLine line;
+    line.m_http_version = std::string(sv.substr(5, first_space - 5));
+
+    int code{};
+    auto code_sv = sv.substr(first_space + 1, second_space - first_space - 1);
+    auto [ptr, ec] = std::from_chars(code_sv.data(), code_sv.data() + code_sv.size(), code);
+    if (ec != std::errc{})
+    {
+        return std::nullopt;
+    }
+
+    line.m_status_code = code;
+    line.m_description = std::string(sv.substr(second_space + 1));
+
+    return line;
+}
+
+std::optional<std::string_view>
 HttpResponse::getBody() const
 {
     return m_body;
 }
 
-std::optional<std::string>
-HttpResponse::getHeader(const std::string& key) const
+std::optional<std::string_view>
+HttpResponse::getHeader(std::string_view key) const
 {
-    if (m_headers.find(key) != std::end(m_headers))
+    auto it = m_headers.find(std::string(key));
+    if (it != std::end(m_headers))
     {
-        return m_headers.at(key);
+        return std::string_view(it->second);
     }
 
     return std::nullopt;
 }
 
-int
-HttpResponse::getStatusCode() const
+std::optional<size_t>
+HttpResponse::getContentLengthValue() const
 {
-    return m_status_code;
+    auto value = getHeader(CONTENT_LENGTH);
+    if (!value)
+    {
+        return std::nullopt;
+    }
+
+    // TODO: Trim string
+    // auto sv = boost::trim(std::string(*value));
+
+    size_t content_length{};
+    auto [ptr, ec] = std::from_chars(value->data(), value->data() + value->size(), content_length);
+
+    if (ec != std::errc{} || ptr != value->data() + value->size())
+    {
+        return std::nullopt;
+    }
+
+    return content_length;
 }
 
-const std::string&
+std::optional<int>
+HttpResponse::getStatusCode() const
+{
+    return m_status_line->m_status_code;
+}
+
+std::optional<std::string_view>
 HttpResponse::getDescription() const
 {
-    return m_description;
+    return m_status_line->m_description;
 }
 
 } // namespace http

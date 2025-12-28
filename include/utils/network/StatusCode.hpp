@@ -1,13 +1,21 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 namespace utils::network {
 
 enum class StatusCode : int8_t
 {
-    FAIL = -1,
-    OK = 0
+    OK = 0,
+    FAIL,
+    CLOSED_BY_PEER,
+    READ_ERROR,
+    WRITE_ERROR,
+    NO_CONTENT_LENGTH
 };
+
+std::string_view
+statusCodeToError(const StatusCode code);
 
 } // namespace utils::network

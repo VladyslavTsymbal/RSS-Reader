@@ -1,20 +1,29 @@
 #include "http/HttpServer.hpp"
+#include "http/HttpConnectionFactory.hpp"
+#include "http/IHttpConnection.hpp"
+
 #include "utils/network/AddrInfoBuilder.hpp"
 #include "utils/Log.hpp" // for LOG_ERROR
+#include "utils/network/StatusCode.hpp"
+#include "utils/network/TcpSocket.hpp"
 #include "utils/network/NetworkUtils.hpp"
+#include "utils/network/Types.hpp"
 
 #include <arpa/inet.h>
+#include <memory>
 #include <netdb.h>
 #include <string>
 #include <fstream>
 
 namespace {
 
-const std::string_view LOG_TAG = "HttpServer";
+constexpr std::string_view LOG_TAG = "HttpServer";
 constexpr auto MAX_REQUESTS = 6;
 
 using utils::network::Socket;
+using utils::network::TcpSocket;
 using utils::network::INetworkUtils;
+using utils::network::StatusCode;
 
 } // namespace
 
@@ -23,12 +32,17 @@ namespace http {
 // HttpServer
 
 HttpServer::HttpServer(
-        std::string ip, const unsigned int port, std::shared_ptr<INetworkUtils> network_utils)
+        std::string ip,
+        const unsigned int port,
+        std::shared_ptr<INetworkUtils> network_utils,
+        std::shared_ptr<HttpConnectionFactory> connection_factory)
     : m_ip(std::move(ip))
     , m_port(port)
     , m_network_utils(std::move(network_utils))
+    , m_connection_factory(std::move(connection_factory))
 {
     assert(m_network_utils);
+    assert(m_connection_factory);
 }
 
 HttpServer::~HttpServer()
@@ -48,24 +62,26 @@ HttpServer::init()
                                .setFlags(AI_PASSIVE)
                                .build();
 
-    auto addrInfo =
+    auto addrinfo =
             m_network_utils->getAddrInfo(m_ip, std::to_string(m_port), &hints)
                     .transform([this](AddrInfoPtr addrinfo) { m_addrinfo = std::move(addrinfo); });
-    if (!addrInfo)
+    if (!addrinfo)
     {
-        LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(addrInfo.error()));
+        LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(addrinfo.error()));
         return false;
     }
 
-    m_server_socket = m_network_utils->createSocket(m_addrinfo.get());
-    if (m_server_socket == nullptr)
+    auto socket = m_network_utils->createTcpSocket(m_addrinfo.get());
+    if (!socket)
     {
         LOG_ERROR(LOG_TAG, "createSocket failed: {}", strerror(errno));
         return false;
     }
+    m_server_socket = std::move(*socket);
 
     LOG_INFO(LOG_TAG, "Socket binding...");
-    const int bind_status = ::bind(*m_server_socket, m_addrinfo->ai_addr, m_addrinfo->ai_addrlen);
+    const int bind_status =
+            ::bind(m_server_socket.fd(), m_addrinfo->ai_addr, m_addrinfo->ai_addrlen);
     if (bind_status)
     {
         LOG_ERROR(LOG_TAG, "Socket binding failed: {}", ::strerror(errno));
@@ -73,7 +89,7 @@ HttpServer::init()
     }
 
     LOG_INFO(LOG_TAG, "Call `listen` for the socket.");
-    const int listen_status = ::listen(*m_server_socket, MAX_REQUESTS);
+    const int listen_status = ::listen(m_server_socket.fd(), MAX_REQUESTS);
     if (listen_status)
     {
         LOG_ERROR(LOG_TAG, "`Listen` failed: {}", ::strerror(errno));
@@ -83,7 +99,7 @@ HttpServer::init()
     // Get rid of annoying 'Address already in use'
     int yes = 1;
     const int sockopt_status =
-            ::setsockopt(*m_server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+            ::setsockopt(m_server_socket.fd(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
     if (sockopt_status)
     {
         LOG_ERROR(LOG_TAG, "`setsockopt` failed: {}", ::strerror(errno));
@@ -98,8 +114,9 @@ void
 HttpServer::run()
 {
     // Currently, this is a straight-forward implementation.
-    // TODO: Enhance - sending/receiving data via connection. Remove hardcoded stuff, like sending
+    // TODO: Remove hardcoded stuff, like sending
     // the specific file, etc.
+    using utils::network::statusCodeToError;
     if (!m_initialized)
     {
         LOG_ERROR(LOG_TAG, "Server can't be started because of failed initialization.");
@@ -109,21 +126,26 @@ HttpServer::run()
     m_running = true;
     while (m_running)
     {
-        Socket client_fd = acceptClient();
-        if (client_fd == nullptr)
+        TcpSocket client = acceptClient();
+        if (!client.isValid())
         {
             LOG_ERROR(LOG_TAG, "Failed to accept the client: {}", ::strerror(errno));
             continue;
         }
 
-        LOG_INFO(LOG_TAG, "Client accepted!");
+        LOG_INFO(LOG_TAG, "Client accepted! Creating the connection.");
+        auto connection = m_connection_factory->createConnection(std::move(client));
 
-        char buffer[30000] = {0};
-        ::read(*client_fd, buffer, 30000);
-        LOG_DEBUG(LOG_TAG, "Data from client: {}", buffer);
+        auto request = connection->receiveData();
+        if (!request)
+        {
+            const StatusCode error = request.error();
+            LOG_ERROR(LOG_TAG, statusCodeToError(error));
+            continue;
+        }
 
-        std::string request(buffer);
-        if (request.find("GET /tests/feed.xml") != std::string::npos)
+        LOG_DEBUG(LOG_TAG, "Recieved data from client: {}", *request);
+        if (request->find("GET /tests/feed.xml") != std::string::npos)
         {
             std::ifstream ifile("feed.xml");
             if (ifile.is_open())
@@ -132,7 +154,7 @@ HttpServer::run()
                 ss << ifile.rdbuf();
 
                 std::string content = ss.str();
-                std::string response_string =
+                std::string response =
                         "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html\r\n"
                         "Content-Length: " +
@@ -142,9 +164,17 @@ HttpServer::run()
                         "\r\n" +
                         content;
 
-                LOG_DEBUG(LOG_TAG, "Send data from server: {}", response_string);
-                auto bytes = std::as_bytes(std::span(response_string));
-                m_network_utils->sendBytes(client_fd, bytes);
+                LOG_DEBUG(LOG_TAG, "Send data from server: {}", response);
+                StatusCode status = connection->sendData(response);
+                connection->closeConnection();
+
+                if (status != StatusCode::OK)
+                {
+                    LOG_ERROR(LOG_TAG, statusCodeToError(status));
+                    continue;
+                }
+
+                LOG_INFO(LOG_TAG, "The data was sent successfully.");
             }
             else
             {
@@ -154,19 +184,11 @@ HttpServer::run()
     }
 }
 
-Socket
+TcpSocket
 HttpServer::acceptClient() const
 {
-    int client_fd = ::accept(*m_server_socket, m_addrinfo->ai_addr, &m_addrinfo->ai_addrlen);
-    int* socket = new int;
-
-    if (socket == nullptr)
-    {
-        return nullptr;
-    }
-
-    *socket = client_fd;
-    return Socket(socket, utils::network::closeSocket);
+    int client_fd = ::accept(m_server_socket.fd(), m_addrinfo->ai_addr, &m_addrinfo->ai_addrlen);
+    return TcpSocket(Socket(client_fd));
 }
 
 bool
