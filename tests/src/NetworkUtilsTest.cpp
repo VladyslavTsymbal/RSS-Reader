@@ -7,7 +7,6 @@ namespace {
 using namespace testing;
 using utils::network::NetworkUtils;
 using utils::network::AddrInfoPtr;
-using utils::network::Socket;
 
 constexpr int INVALID_SOCK_FD = -1;
 constexpr int VALID_SOCK_FD = 123;
@@ -18,21 +17,19 @@ struct NetworkUtilsTest : public Test
     {
         syscalls_wrapper = std::make_shared<StrictMock<MockSysCallsWrapper>>();
         network_utils = std::make_unique<NetworkUtils>(syscalls_wrapper);
-        invalid_socket = createSocketWithFd(INVALID_SOCK_FD);
-        valid_socket = createSocketWithFd(VALID_SOCK_FD);
+        valid_socket = createTcpSocketWithFd(VALID_SOCK_FD);
     }
 
     std::shared_ptr<StrictMock<MockSysCallsWrapper>> syscalls_wrapper;
     std::unique_ptr<NetworkUtils> network_utils;
-    utils::network::Socket invalid_socket;
-    utils::network::Socket valid_socket;
+    utils::network::TcpSocket valid_socket;
 };
 
 TEST_F(NetworkUtilsTest, when_addrinfo_is_nullptr_then_socket_syscall_is_never_called)
 {
     EXPECT_CALL(*syscalls_wrapper, socketSyscall(_, _, _)).Times(0);
-    Socket socket = network_utils->createSocket(nullptr);
-    ASSERT_EQ(socket, nullptr);
+    auto socket = network_utils->createTcpSocket(nullptr);
+    ASSERT_FALSE(socket);
 }
 
 TEST_F(NetworkUtilsTest,
@@ -48,8 +45,8 @@ TEST_F(NetworkUtilsTest,
             .Times(list_size)
             .WillRepeatedly(Return(-1));
 
-    Socket socket = network_utils->createSocket(info);
-    EXPECT_EQ(socket, nullptr);
+    auto socket = network_utils->createTcpSocket(info);
+    ASSERT_FALSE(socket);
 
     // Cleanup linked list
     deleteAddrinfoList(info);
@@ -62,8 +59,10 @@ TEST_F(NetworkUtilsTest, when_socket_syscall_successful_then_valid_socket_descri
 
     EXPECT_CALL(*syscalls_wrapper, socketSyscall(_, _, _)).Times(1).WillOnce(Return(VALID_SOCK_FD));
 
-    Socket socket = network_utils->createSocket(info);
-    EXPECT_EQ(*socket, VALID_SOCK_FD);
+    auto socket = network_utils->createTcpSocket(info);
+    ASSERT_TRUE(socket);
+    EXPECT_TRUE(socket->isValid());
+    EXPECT_EQ(socket->fd(), VALID_SOCK_FD);
 
     delete info;
 }
@@ -81,8 +80,10 @@ TEST_F(NetworkUtilsTest, when_socket_syscall_successful_then_other_addrinfo_entr
             .WillOnce(Return(-1))
             .WillOnce(Return(VALID_SOCK_FD));
 
-    Socket socket = network_utils->createSocket(info);
-    EXPECT_EQ(*socket, VALID_SOCK_FD);
+    auto socket = network_utils->createTcpSocket(info);
+    ASSERT_TRUE(socket);
+    EXPECT_TRUE(socket->isValid());
+    EXPECT_EQ(socket->fd(), VALID_SOCK_FD);
 
     // Cleanup linked list
     deleteAddrinfoList(info);

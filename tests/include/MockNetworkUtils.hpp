@@ -9,19 +9,23 @@ namespace {
 
 using utils::network::StatusCode;
 using utils::network::AddrInfoPtr;
-using utils::network::Socket;
+using utils::network::TcpSocket;
 using utils::network::Bytes;
 using utils::network::BytesView;
 
 struct MockNetworkUtils : public utils::network::INetworkUtils
 {
-    MOCK_METHOD(Socket, createSocket, (const addrinfo* addr), (override));
+    MOCK_METHOD(std::optional<TcpSocket>, createTcpSocket, (const addrinfo* addr), (override));
 
-    MOCK_METHOD(StatusCode, connectSocket, (const Socket&, const addrinfo* info), (override));
+    MOCK_METHOD(StatusCode, connectSocket, (const TcpSocket&, const addrinfo* info), (override));
 
-    MOCK_METHOD(StatusCode, sendBytes, (const Socket&, BytesView), (override, const));
+    MOCK_METHOD(StatusCode, sendBytes, (const TcpSocket&, BytesView), (override, const));
 
-    MOCK_METHOD(std::optional<Bytes>, receiveBytes, (const Socket&), (override, const));
+    MOCK_METHOD(
+            (std::expected<Bytes, StatusCode>),
+            receiveBytes,
+            (const TcpSocket&),
+            (override, const));
 
     MOCK_METHOD(
             (std::expected<AddrInfoPtr, int>),

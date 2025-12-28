@@ -8,6 +8,9 @@ set (TEST_SRCS ${_TEST_SRCS}
                src/http/HttpResponse.cpp
                src/http/HttpConnection.cpp
                src/http/HttpConnectionFactory.cpp
+               src/http/HttpHelpers.cpp
+               src/utils/network/Socket.cpp
+               src/utils/network/StatusCode.cpp
                src/utils/network/NetworkUtils.cpp
                src/utils/network/AddrInfoBuilder.cpp)
 

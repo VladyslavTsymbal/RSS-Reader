@@ -45,8 +45,9 @@ TEST(HttpResponseTest, when_response_has_okay_status_code_then_response_is_succe
     ss << okay_response;
     http::HttpResponse response(ss.str());
 
-    EXPECT_TRUE(response.isSuccessful());
-    EXPECT_EQ(response.getStatusCode(), 200);
+    auto status_code = response.getStatusCode();
+    ASSERT_TRUE(status_code);
+    EXPECT_EQ(*status_code, 200);
 }
 
 TEST(HttpResponseTest, when_response_has_not_okay_status_code_then_response_is_not_successful)
@@ -55,8 +56,9 @@ TEST(HttpResponseTest, when_response_has_not_okay_status_code_then_response_is_n
     ss << forbidden_response;
     http::HttpResponse response(ss.str());
 
-    EXPECT_FALSE(response.isSuccessful());
-    EXPECT_EQ(response.getStatusCode(), 403);
+    auto status_code = response.getStatusCode();
+    ASSERT_TRUE(status_code);
+    EXPECT_EQ(*status_code, 403);
 }
 
 TEST(HttpResponseTest, when_present_header_data_asked_by_key_then_data_returned)
@@ -65,7 +67,8 @@ TEST(HttpResponseTest, when_present_header_data_asked_by_key_then_data_returned)
     ss << forbidden_response;
     http::HttpResponse response(ss.str());
 
-    EXPECT_NE(response.getHeader("Date"), std::nullopt);
+    auto date = response.getHeader("Date");
+    ASSERT_TRUE(date);
     EXPECT_EQ(response.getHeader("Date"), "Tue, 02 Apr 2024 12:00:00 GMT");
 }
 
@@ -84,7 +87,9 @@ TEST(HttpResponseTest, when_get_description_called_then_actual_description_retur
     ss << no_content_response;
     http::HttpResponse response(ss.str());
 
-    EXPECT_EQ(response.getDescription(), "No Content");
+    auto description = response.getDescription();
+    ASSERT_TRUE(description);
+    EXPECT_EQ(*description, "No Content");
 }
 
 TEST(HttpResponseTest, when_response_has_no_body_then_get_body_returns_empty_string)
@@ -93,7 +98,7 @@ TEST(HttpResponseTest, when_response_has_no_body_then_get_body_returns_empty_str
     ss << no_content_response;
     http::HttpResponse response(ss.str());
 
-    EXPECT_TRUE(response.getBody().empty());
+    EXPECT_EQ(response.getBody(), std::nullopt);
 }
 
 } // namespace

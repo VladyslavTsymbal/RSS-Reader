@@ -5,28 +5,14 @@
 #include <cstring>
 
 namespace {
+
+using utils::network::TcpSocket;
 using utils::network::Socket;
 
-Socket
-createSocketWithFd(const int fd)
+TcpSocket
+createTcpSocketWithFd(const int fd)
 {
-    int* sock_fd = new int;
-    if (sock_fd == nullptr)
-    {
-        return nullptr;
-    }
-
-    *sock_fd = fd;
-    Socket socket(sock_fd, [](int* sock_fd) -> int {
-        if (sock_fd != nullptr)
-        {
-            delete sock_fd;
-        }
-
-        return 0;
-    });
-
-    return socket;
+    return TcpSocket(Socket(fd));
 }
 
 addrinfo*

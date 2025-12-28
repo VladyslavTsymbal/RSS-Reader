@@ -38,7 +38,7 @@ TEST_F(HttpConnectionFactoryTest, when_createSocket_fails_then_connection_is_nul
 {
     auto addr_info = std::make_unique<addrinfo>();
     EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
-    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(ReturnNull());
+    EXPECT_CALL(*network_utils, createTcpSocket(_)).WillOnce(Return(std::nullopt));
 
     const auto connection = connection_factory->createConnection(TEST_IP, TEST_PORT);
     ASSERT_EQ(connection, nullptr);
@@ -47,11 +47,11 @@ TEST_F(HttpConnectionFactoryTest, when_createSocket_fails_then_connection_is_nul
 TEST_F(HttpConnectionFactoryTest, when_connectSocket_fails_then_connection_is_nullptr)
 {
     auto addr_info = std::make_unique<addrinfo>();
-    Socket socket = createSocketWithFd(VALID_SOCKET_FD);
-    ASSERT_NE(socket, nullptr);
+    TcpSocket socket = createTcpSocketWithFd(VALID_SOCKET_FD);
+    ASSERT_TRUE(socket.isValid());
 
     EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
-    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(std::move(socket)));
+    EXPECT_CALL(*network_utils, createTcpSocket(_)).WillOnce(Return(std::move(socket)));
     EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::FAIL));
 
     const auto connection = connection_factory->createConnection(TEST_IP, TEST_PORT);
@@ -61,11 +61,11 @@ TEST_F(HttpConnectionFactoryTest, when_connectSocket_fails_then_connection_is_nu
 TEST_F(HttpConnectionFactoryTest, when_connectSocket_is_succeed_then_valid_connection_returned)
 {
     auto addr_info = std::make_unique<addrinfo>();
-    Socket socket = createSocketWithFd(VALID_SOCKET_FD);
-    ASSERT_NE(socket, nullptr);
+    TcpSocket socket = createTcpSocketWithFd(VALID_SOCKET_FD);
+    ASSERT_TRUE(socket.isValid());
 
     EXPECT_CALL(*network_utils, getAddrInfo(_, _, _)).WillOnce(Return(std::move(addr_info)));
-    EXPECT_CALL(*network_utils, createSocket(_)).WillOnce(Return(std::move(socket)));
+    EXPECT_CALL(*network_utils, createTcpSocket(_)).WillOnce(Return(std::move(socket)));
     EXPECT_CALL(*network_utils, connectSocket(_, _)).WillOnce(Return(StatusCode::OK));
 
     const auto connection = connection_factory->createConnection(TEST_IP, TEST_PORT);
