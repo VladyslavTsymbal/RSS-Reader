@@ -23,7 +23,7 @@ main()
     HttpRequest request = HttpRequestBuilder()
                                   .setHost("127.0.0.1")
                                   .setRequestType(HttpRequest::HttpRequestMethod::GET)
-                                  .setRequestUrl("/tests/feed.xml")
+                                  .setRequestUrl("/feed.xml")
                                   .build();
 
     HttpClient http_client(std::move(connection_factory));

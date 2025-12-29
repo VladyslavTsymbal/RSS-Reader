@@ -37,7 +37,6 @@ prepareHttpRequest(const HttpRequest& request)
     return std::format(
             "{1} {2} HTTP/1.1{0}"
             "Host: {3}{0}"
-            "Content-Length: 0{0}"
             "Connection: Close{0}"
             "{0}",
             CRLF,

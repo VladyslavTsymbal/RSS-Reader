@@ -145,42 +145,56 @@ HttpServer::run()
         }
 
         LOG_DEBUG(LOG_TAG, "Recieved data from client: {}", *request);
-        if (request->find("GET /tests/feed.xml") != std::string::npos)
+
+        std::string content;
+        if (request->find("GET /feed.xml") != std::string::npos)
         {
             std::ifstream ifile("feed.xml");
             if (ifile.is_open())
             {
                 std::stringstream ss;
                 ss << ifile.rdbuf();
-
-                std::string content = ss.str();
-                std::string response =
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: text/html\r\n"
-                        "Content-Length: " +
-                        std::to_string(content.size()) +
-                        "\r\n"
-                        "Connection: close\r\n"
-                        "\r\n" +
-                        content;
-
-                LOG_DEBUG(LOG_TAG, "Send data from server: {}", response);
-                StatusCode status = connection->sendData(response);
-                connection->closeConnection();
-
-                if (status != StatusCode::OK)
-                {
-                    LOG_ERROR(LOG_TAG, statusCodeToError(status));
-                    continue;
-                }
-
-                LOG_INFO(LOG_TAG, "The data was sent successfully.");
+                content = ss.str();
             }
             else
             {
                 LOG_ERROR(LOG_TAG, "Couldn't open \"feed.xml\"");
             }
         }
+        else
+        {
+            content = R"(
+                <html>
+                <head><script src="https://unpkg.com/htmx.org"></script></head>
+                <body>
+                    <button hx-get="/feed.xml" hx-target="#result">Get Feed</button>
+                    <div id="result"></div>
+                </body>
+                </html>
+            )";
+        }
+
+        std::string response =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html\r\n"
+                "Content-Length: " +
+                std::to_string(content.size()) +
+                "\r\n"
+                "Connection: close\r\n"
+                "\r\n" +
+                content;
+
+        LOG_DEBUG(LOG_TAG, "Send data from server: {}", response);
+        StatusCode status = connection->sendData(response);
+        connection->closeConnection();
+
+        if (status != StatusCode::OK)
+        {
+            LOG_ERROR(LOG_TAG, statusCodeToError(status));
+            continue;
+        }
+
+        LOG_INFO(LOG_TAG, "The data was sent successfully.");
     }
 }
 

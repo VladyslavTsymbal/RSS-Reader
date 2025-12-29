@@ -81,8 +81,8 @@ HttpConnection::receiveData() const
     auto content_length = getContentLength(headers_sv);
     if (!content_length)
     {
-        // `Content-Length` header is missing
-        return std::unexpected(StatusCode::NO_CONTENT_LENGTH);
+        // `Content-Length` header is missing, return headers.
+        return std::string(reinterpret_cast<const char*>(received.data()), received.size());
     }
 
     // As we most probably read more than only headers, we need to calculate how much data left to
@@ -110,8 +110,7 @@ HttpConnection::receiveData() const
         bytes_left = bytes_left > bytes->size() ? bytes_left - bytes->size() : 0;
     }
 
-    std::string received_str(reinterpret_cast<const char*>(received.data()), received.size());
-    return received_str;
+    return std::string(reinterpret_cast<const char*>(received.data()), received.size());
 }
 
 bool
