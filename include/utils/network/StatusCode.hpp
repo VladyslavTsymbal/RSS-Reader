@@ -5,6 +5,7 @@
 
 namespace utils::network {
 
+// TODO: Separate http status code from network codes
 enum class StatusCode : int8_t
 {
     OK = 0,

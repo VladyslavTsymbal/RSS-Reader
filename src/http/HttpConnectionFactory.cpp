@@ -1,9 +1,13 @@
 #include "http/HttpConnectionFactory.hpp"
 #include "http/HttpConnection.hpp"
+
+#include "utils/network/ProtocolFamily.hpp"
+#include "utils/network/Socket.hpp"
 #include "utils/network/INetworkUtils.hpp"
 #include "utils/network/AddrInfoBuilder.hpp"
-#include "utils/Log.hpp"
+#include "utils/network/SocketType.hpp"
 #include "utils/network/StatusCode.hpp"
+#include "utils/Log.hpp"
 
 namespace {
 
@@ -14,6 +18,8 @@ using utils::network::AddrInfoBuilder;
 using utils::network::StatusCode;
 using utils::network::TcpSocket;
 using utils::network::Socket;
+using utils::network::ProtocolFamily;
+using utils::network::SocketType;
 
 } // namespace
 
@@ -29,8 +35,8 @@ std::unique_ptr<IHttpConnection>
 HttpConnectionFactory::createConnection(std::string_view ip, const unsigned int port)
 {
     const auto hints = AddrInfoBuilder()
-                               .setProtocolFamily(AddrInfoBuilder::ProtocolFamily::UNSPECIFIED)
-                               .setSockType(AddrInfoBuilder::SockType::TCP)
+                               .setProtocolFamily(ProtocolFamily::UNSPECIFIED)
+                               .setSockType(SocketType::TCP)
                                .build();
 
     auto addr_info = m_network_utils->getAddrInfo(ip, std::to_string(port), &hints);

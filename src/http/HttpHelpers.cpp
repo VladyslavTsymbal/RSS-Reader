@@ -1,9 +1,7 @@
 #include "http/HttpHelpers.hpp"
+#include "http/Constants.hpp"
 
-#include <boost/algorithm/string_regex.hpp>
 #include <charconv>
-#include <string_view>
-#include <unordered_map> // for unordered_map, operator==, _Node_iterator_base
 
 namespace http {
 
@@ -53,24 +51,6 @@ getContentLength(std::string_view sv)
     }
 
     return value;
-}
-
-std::optional<std::string>
-requestMethodToString(HttpRequest::HttpRequestMethod request_method)
-{
-    static std::unordered_map<HttpRequest::HttpRequestMethod, std::string> conversion_map = {
-            {HttpRequest::HttpRequestMethod::GET, "GET"},
-            {HttpRequest::HttpRequestMethod::POST, "POST"},
-            {HttpRequest::HttpRequestMethod::PUT, "PUT"},
-            {HttpRequest::HttpRequestMethod::DELETE, "DELETE"}};
-
-    const auto it = conversion_map.find(request_method);
-    if (it == std::end(conversion_map))
-    {
-        return std::nullopt;
-    }
-
-    return it->second;
 }
 
 HttpHeaders
@@ -132,6 +112,18 @@ headersToString(const HttpHeaders& headers)
     }
 
     return str;
+}
+
+std::optional<std::string_view>
+getValueFromHeader(const HttpHeaders& headers, std::string_view key)
+{
+    auto it = headers.find(std::string(key));
+    if (it != std::end(headers))
+    {
+        return std::string_view(it->second);
+    }
+
+    return std::nullopt;
 }
 
 } // namespace http

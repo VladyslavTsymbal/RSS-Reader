@@ -1,8 +1,9 @@
 #include "http/HttpResponse.hpp"
 #include "http/HttpHelpers.hpp"
+#include "http/Constants.hpp"
 
-#include <iterator>
 #include <optional>
+#include <charconv>
 
 namespace http {
 
@@ -65,7 +66,7 @@ HttpResponse::parseStatusLine(std::string_view sv)
         sv = sv.substr(0, crlf);
     }
 
-    if (!sv.starts_with("HTTP/"))
+    if (!sv.starts_with(HTTP_1_1))
     {
         return std::nullopt;
     }
@@ -108,13 +109,7 @@ HttpResponse::getBody() const
 std::optional<std::string_view>
 HttpResponse::getHeader(std::string_view key) const
 {
-    auto it = m_headers.find(std::string(key));
-    if (it != std::end(m_headers))
-    {
-        return std::string_view(it->second);
-    }
-
-    return std::nullopt;
+    return getValueFromHeader(m_headers, key);
 }
 
 std::optional<size_t>
@@ -150,6 +145,12 @@ std::optional<std::string_view>
 HttpResponse::getDescription() const
 {
     return m_status_line->m_description;
+}
+
+const HttpHeaders&
+HttpResponse::getHeaders() const
+{
+    return m_headers;
 }
 
 } // namespace http

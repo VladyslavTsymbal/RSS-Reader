@@ -1,10 +1,8 @@
 #pragma once
 
-#include "http/HttpHelpers.hpp"
+#include "http/Types.hpp"
 
-#include <sstream>
-#include <vector>
-#include <string_view>
+#include <string>
 #include <optional>
 
 namespace http {
@@ -32,6 +30,9 @@ public:
 
     std::optional<std::string_view>
     getDescription() const;
+
+    const HttpHeaders&
+    getHeaders() const;
 
 private:
     void

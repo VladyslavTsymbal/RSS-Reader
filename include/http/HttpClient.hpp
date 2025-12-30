@@ -1,12 +1,11 @@
 #pragma once
 
-#include "http/HttpConnectionFactory.hpp"
-#include "http/HttpResponse.hpp" // for HttpResponse
-
 #include <optional> // for optional
+#include <memory>
 
 namespace http {
 
+class HttpResponse;
 class HttpRequest;
 class IHttpConnection;
 class HttpConnectionFactory;

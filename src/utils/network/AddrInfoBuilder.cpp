@@ -10,14 +10,14 @@ AddrInfoBuilder::AddrInfoBuilder()
 }
 
 AddrInfoBuilder&
-AddrInfoBuilder::setProtocolFamily(AddrInfoBuilder::ProtocolFamily family)
+AddrInfoBuilder::setProtocolFamily(ProtocolFamily family)
 {
     m_addrinfo.ai_family = static_cast<int>(family);
     return *this;
 }
 
 AddrInfoBuilder&
-AddrInfoBuilder::setSockType(AddrInfoBuilder::SockType sock_type)
+AddrInfoBuilder::setSockType(SocketType sock_type)
 {
     m_addrinfo.ai_socktype = static_cast<int>(sock_type);
     return *this;

@@ -15,6 +15,7 @@ namespace http {
 
 class IHttpConnection;
 class HttpConnectionFactory;
+class HttpRequest;
 
 class HttpServer
 {
@@ -40,8 +41,15 @@ public:
     bool
     isRunning() const;
 
+private:
     std::unique_ptr<http::IHttpConnection>
     acceptConnection() const;
+
+    std::string
+    createResponse(const HttpRequest&) const;
+
+    bool
+    shouldCloseConnection(const HttpRequest&) const;
 
 private:
     const std::string m_ip;

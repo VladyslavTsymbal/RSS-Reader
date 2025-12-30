@@ -1,5 +1,10 @@
 #include "http/HttpServer.hpp"
+#include "http/ConnectionType.hpp"
+#include "http/Constants.hpp"
 #include "http/HttpConnectionFactory.hpp"
+#include "http/HttpRequest.hpp"
+#include "http/HttpRequestMethod.hpp"
+#include "http/HttpResponse.hpp"
 #include "http/IHttpConnection.hpp"
 
 #include "utils/network/AddrInfoBuilder.hpp"
@@ -8,6 +13,8 @@
 #include "utils/network/TcpSocket.hpp"
 #include "utils/network/INetworkUtils.hpp"
 #include "utils/network/Types.hpp"
+#include "utils/network/ProtocolFamily.hpp"
+#include "utils/network/SocketType.hpp"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -22,6 +29,21 @@ using utils::network::Socket;
 using utils::network::TcpSocket;
 using utils::network::INetworkUtils;
 using utils::network::StatusCode;
+using utils::network::AddrInfoBuilder;
+using utils::network::AddrInfoPtr;
+using utils::network::ProtocolFamily;
+using utils::network::SocketType;
+
+constexpr std::string_view HTMX_RESPONSE =
+        R"(
+                <html>
+                <head><script src="https://unpkg.com/htmx.org"></script></head>
+                <body>
+                    <button hx-get="/feed.xml" hx-target="#result">Get Feed</button>
+                    <div id="result"></div>
+                </body>
+                </html>
+            )";
 
 } // namespace
 
@@ -51,12 +73,9 @@ HttpServer::~HttpServer()
 bool
 HttpServer::init()
 {
-    using utils::network::AddrInfoBuilder;
-    using utils::network::AddrInfoPtr;
-
     const auto hints = AddrInfoBuilder()
-                               .setProtocolFamily(AddrInfoBuilder::ProtocolFamily::UNSPECIFIED)
-                               .setSockType(AddrInfoBuilder::SockType::TCP)
+                               .setProtocolFamily(ProtocolFamily::UNSPECIFIED)
+                               .setSockType(SocketType::TCP)
                                .setFlags(AI_PASSIVE)
                                .build();
 
@@ -132,61 +151,33 @@ HttpServer::run()
         }
 
         LOG_INFO(LOG_TAG, "Client accepted! Creating the connection.");
-        const auto request = new_connection->receiveData();
-        if (!request)
+        auto request_data = new_connection->receiveData();
+        if (!request_data)
         {
-            const StatusCode error = request.error();
+            const StatusCode error = request_data.error();
             LOG_ERROR(LOG_TAG, statusCodeToError(error));
             continue;
         }
 
-        LOG_DEBUG(LOG_TAG, "Recieved data from client: {}", *request);
-        std::string content;
-        if (request->find("GET /feed.xml") != std::string::npos)
+        const auto request = HttpRequestBuilder().buildFromString(*request_data);
+        if (!request)
         {
-            std::ifstream ifile("feed.xml");
-            if (ifile.is_open())
-            {
-                std::stringstream ss;
-                ss << ifile.rdbuf();
-                content = ss.str();
-            }
-            else
-            {
-                LOG_ERROR(LOG_TAG, "Couldn't open \"feed.xml\"");
-            }
-        }
-        else
-        {
-            content = R"(
-                <html>
-                <head><script src="https://unpkg.com/htmx.org"></script></head>
-                <body>
-                    <button hx-get="/feed.xml" hx-target="#result">Get Feed</button>
-                    <div id="result"></div>
-                </body>
-                </html>
-            )";
+            LOG_ERROR(LOG_TAG, "Failed to convert received data to the valid HttpRequest");
+            continue;
         }
 
-        std::string response =
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html\r\n"
-                "Content-Length: " +
-                std::to_string(content.size()) +
-                "\r\n"
-                "Connection: close\r\n"
-                "\r\n" +
-                content;
-
-        LOG_DEBUG(LOG_TAG, "Send data from server: {}", response);
+        const auto response = createResponse(*request);
         const StatusCode status = new_connection->sendData(response);
-        new_connection->closeConnection();
 
         if (status != StatusCode::OK)
         {
             LOG_ERROR(LOG_TAG, statusCodeToError(status));
             continue;
+        }
+
+        if (shouldCloseConnection(*request))
+        {
+            new_connection->closeConnection();
         }
 
         LOG_INFO(LOG_TAG, "The data was sent successfully.");
@@ -203,6 +194,65 @@ HttpServer::acceptConnection() const
     }
 
     return nullptr;
+}
+
+std::string
+HttpServer::createResponse(const HttpRequest& request) const
+{
+    // TODO: Remove this hardcode and implement HttpResponseBuilder with toString method
+    // This method should return HttpResponse or std::optional<HttpResponse>
+    std::string response_content;
+    if (request.getRequestMethod() == HttpRequestMethod::GET)
+    {
+        if (request.getRequestTarget() == "/feed.xml")
+        {
+            std::ifstream ifile("feed.xml");
+            if (ifile.is_open())
+            {
+                std::stringstream ss;
+                ss << ifile.rdbuf();
+                response_content = ss.str();
+            }
+            else
+            {
+                LOG_ERROR(LOG_TAG, "Couldn't open \"feed.xml\"");
+            }
+        }
+        else
+        {
+            response_content = HTMX_RESPONSE;
+        }
+    }
+
+    std::string response =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: " +
+            std::to_string(response_content.size()) +
+            "\r\n"
+            "Connection: close\r\n"
+            "\r\n" +
+            response_content;
+
+    return response;
+}
+
+bool
+HttpServer::shouldCloseConnection(const HttpRequest& request) const
+{
+    const auto connection_type = request.getConnectionType();
+    if (!connection_type)
+    {
+        // In HTTP/1.1 connection should stay alive by default
+        return false;
+    }
+
+    if (connection_type == ConnectionType::KEEP_ALIVE)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool

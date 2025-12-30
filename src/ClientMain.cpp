@@ -1,7 +1,10 @@
 #include "http/HttpClient.hpp"
 #include "http/HttpRequest.hpp"
+#include "http/HttpResponse.hpp"
 #include "http/HttpConnectionFactory.hpp"
 #include "http/IHttpConnection.hpp"
+#include "http/HttpRequestMethod.hpp"
+
 #include "utils/network/NetworkUtils.hpp"
 #include "utils/network/SysCallsWrapper.hpp"
 #include "utils/Log.hpp"
@@ -20,14 +23,20 @@ main()
             std::make_shared<utils::network::NetworkUtils>(std::move(syscall_wrappers));
     auto connection_factory = std::make_shared<HttpConnectionFactory>(std::move(network_utils));
 
-    HttpRequest request = HttpRequestBuilder()
-                                  .setHost("127.0.0.1")
-                                  .setRequestType(HttpRequest::HttpRequestMethod::GET)
-                                  .setRequestUrl("/feed.xml")
-                                  .build();
+    auto request = HttpRequestBuilder()
+                           .setHost("127.0.0.1")
+                           .setRequestType(HttpRequestMethod::GET)
+                           .setRequestTarget("/feed.xml")
+                           .setConnectionType(ConnectionType::CLOSE)
+                           .build();
+    if (!request)
+    {
+        LOG_ERROR(LOG_TAG, "Failed to build http request!");
+        return 1;
+    }
 
     HttpClient http_client(std::move(connection_factory));
-    const auto response = http_client.sendRequest(request);
+    const auto response = http_client.sendRequest(*request);
     if (!response)
     {
         LOG_ERROR(LOG_TAG, "Failed to get response from server!");

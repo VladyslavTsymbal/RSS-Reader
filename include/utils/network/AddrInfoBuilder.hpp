@@ -1,31 +1,19 @@
 #pragma once
 
-#include <netdb.h>      // for addrinfo
-#include <sys/socket.h> // for AF_INET, AF_INET6, AF_UNSPEC, SOCK_DGRAM
+#include "utils/network/SocketType.hpp"
+#include "utils/network/ProtocolFamily.hpp"
+
+#include <netdb.h> // for addrinfo
 
 namespace utils::network {
 
 class AddrInfoBuilder
 {
 public:
-    enum class ProtocolFamily : int
-    {
-        IPv4 = AF_INET,
-        IPv6 = AF_INET6,
-        UNSPECIFIED = AF_UNSPEC // Both allowed
-    };
-
-    enum class SockType : int
-    {
-        TCP = SOCK_STREAM,
-        UDP = SOCK_DGRAM
-    };
-
-public:
     AddrInfoBuilder();
 
     AddrInfoBuilder&
-    setSockType(SockType sock_type);
+    setSockType(SocketType sock_type);
 
     AddrInfoBuilder&
     setProtocolFamily(ProtocolFamily family);
