@@ -112,4 +112,26 @@ parseHeaders(std::string_view headers_sv)
     return http_headers;
 }
 
+std::string
+headersToString(const HttpHeaders& headers)
+{
+    if (headers.empty())
+    {
+        return {};
+    }
+
+    std::string str;
+    str.reserve(512);
+
+    for (const auto& [key, value] : headers)
+    {
+        str.append(key);
+        str.append(": ");
+        str.append(value);
+        str.append(CRLF);
+    }
+
+    return str;
+}
+
 } // namespace http

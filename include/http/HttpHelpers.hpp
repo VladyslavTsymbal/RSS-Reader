@@ -27,4 +27,7 @@ requestMethodToString(HttpRequest::HttpRequestMethod request_method);
 HttpHeaders
 parseHeaders(std::string_view headers_sv);
 
+std::string
+headersToString(const HttpHeaders& headers);
+
 } // namespace http

@@ -72,7 +72,7 @@ HttpServer::init()
     auto socket = m_network_utils->createTcpSocket(m_addrinfo.get());
     if (!socket)
     {
-        LOG_ERROR(LOG_TAG, "createSocket failed: {}", ::strerror(errno));
+        LOG_ERROR(LOG_TAG, "createTcpSocket failed: {}", ::strerror(errno));
         return false;
     }
     m_server_socket = std::move(*socket);
