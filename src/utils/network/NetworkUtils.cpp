@@ -8,6 +8,7 @@ namespace utils::network {
 NetworkUtils::NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper)
     : m_syscalls_wrapper(std::move(syscalls_wrapper))
 {
+    assert(m_syscalls_wrapper);
 }
 
 std::optional<TcpSocket>
@@ -43,6 +44,19 @@ NetworkUtils::connectSocket(const TcpSocket& socket, const addrinfo* info)
     return StatusCode::FAIL;
 }
 
+std::optional<TcpSocket>
+NetworkUtils::acceptSocket(const TcpSocket& socket, const AddrInfoPtr& addrinfo) const
+{
+    const int socket_fd = m_syscalls_wrapper->acceptSyscall(
+            socket.fd(), addrinfo->ai_addr, &addrinfo->ai_addrlen);
+    if (socket_fd >= 0)
+    {
+        return TcpSocket(Socket(socket_fd));
+    }
+
+    return std::nullopt;
+}
+
 std::expected<AddrInfoPtr, int>
 NetworkUtils::getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints)
 {
@@ -55,7 +69,7 @@ NetworkUtils::getAddrInfo(std::string_view ip, std::string_view port, const addr
         return std::unexpected(status);
     }
 
-    return AddrInfoPtr(result, freeaddrinfo);
+    return AddrInfoPtr(result, ::freeaddrinfo);
 }
 
 StatusCode

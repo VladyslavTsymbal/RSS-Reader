@@ -13,6 +13,7 @@ class INetworkUtils;
 
 namespace http {
 
+class IHttpConnection;
 class HttpConnectionFactory;
 
 class HttpServer
@@ -39,8 +40,8 @@ public:
     bool
     isRunning() const;
 
-    utils::network::TcpSocket
-    acceptClient() const;
+    std::unique_ptr<http::IHttpConnection>
+    acceptConnection() const;
 
 private:
     const std::string m_ip;

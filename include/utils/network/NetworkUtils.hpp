@@ -21,6 +21,9 @@ public:
     StatusCode
     connectSocket(const TcpSocket& socket, const addrinfo* info) override;
 
+    std::optional<TcpSocket>
+    acceptSocket(const TcpSocket&, const AddrInfoPtr&) const override;
+
     std::expected<AddrInfoPtr, int>
     getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) override;
 

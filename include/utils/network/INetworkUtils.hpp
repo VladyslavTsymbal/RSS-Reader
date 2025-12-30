@@ -21,6 +21,9 @@ public:
     virtual StatusCode
     connectSocket(const TcpSocket&, const addrinfo*) = 0;
 
+    virtual std::optional<TcpSocket>
+    acceptSocket(const TcpSocket&, const AddrInfoPtr&) const = 0;
+
     virtual std::expected<AddrInfoPtr, int>
     getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) = 0;
 

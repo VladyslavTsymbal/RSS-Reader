@@ -10,17 +10,20 @@ public:
     virtual ~ISysCallsWrapper() = default;
 
     virtual int
-    socketSyscall(int domain, int type, int protocol) = 0;
+    socketSyscall(int domain, int type, int protocol) const = 0;
 
     virtual int
-    connectSyscall(const int fd, const sockaddr* addr, socklen_t len) = 0;
+    connectSyscall(int fd, const sockaddr* addr, socklen_t len) const = 0;
+
+    virtual int
+    acceptSyscall(int fd, sockaddr* addr, socklen_t* len) const = 0;
 
     virtual int
     getaddrinfoSyscall(
             const char* __restrict name,
             const char* __restrict service,
             const addrinfo* __restrict req,
-            addrinfo** __restrict pai) = 0;
+            addrinfo** __restrict pai) const = 0;
 
 protected:
     ISysCallsWrapper() = default;

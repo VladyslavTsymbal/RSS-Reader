@@ -1,7 +1,6 @@
 #include "http/HttpResponse.hpp"
 #include "http/HttpHelpers.hpp"
 
-#include <algorithm>
 #include <iterator>
 #include <optional>
 
