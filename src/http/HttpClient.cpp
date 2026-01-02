@@ -44,6 +44,12 @@ HttpClient::sendRequest(const HttpRequest& request)
     LOG_DEBUG(LOG_TAG, "Request content:\n{}\n", request_string);
 
     auto connection = m_factory->createConnection("127.0.0.1", 8080);
+    if (!connection)
+    {
+        LOG_ERROR(LOG_TAG, "Failed to createConnection.");
+        return std::nullopt;
+    }
+
     const StatusCode status = connection->sendData(request_string);
     if (status != StatusCode::OK)
     {
