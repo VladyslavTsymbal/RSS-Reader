@@ -12,11 +12,11 @@ NetworkUtils::NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper)
 }
 
 std::optional<TcpSocket>
-NetworkUtils::createTcpSocket(const addrinfo* addr)
+NetworkUtils::createTcpSocket(const AddrInfoPtr& addr)
 {
     int socket_fd = -1;
 
-    for (auto it = addr; it != nullptr; it = it->ai_next)
+    for (auto it = addr.get(); it != nullptr; it = it->ai_next)
     {
         socket_fd = m_syscalls_wrapper->socketSyscall(
                 addr->ai_family, addr->ai_socktype, addr->ai_protocol);
@@ -45,10 +45,10 @@ NetworkUtils::connectSocket(const TcpSocket& socket, const addrinfo* info)
 }
 
 std::optional<TcpSocket>
-NetworkUtils::acceptSocket(const TcpSocket& socket, const AddrInfoPtr& addrinfo) const
+NetworkUtils::acceptSocket(const TcpSocket& socket, const AddrInfoPtr& info) const
 {
     const int socket_fd = m_syscalls_wrapper->acceptSyscall(
-            socket.fd(), addrinfo->ai_addr, &addrinfo->ai_addrlen);
+            socket.fd(), info->ai_addr, &info->ai_addrlen);
     if (socket_fd >= 0)
     {
         return TcpSocket(Socket(socket_fd));
@@ -58,13 +58,13 @@ NetworkUtils::acceptSocket(const TcpSocket& socket, const AddrInfoPtr& addrinfo)
 }
 
 std::expected<AddrInfoPtr, int>
-NetworkUtils::getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints)
+NetworkUtils::getAddrInfo(std::string_view ip, Port port, const addrinfo* hints)
 {
     int status = 0;
     addrinfo* result;
 
-    if ((status = m_syscalls_wrapper->getaddrinfoSyscall(ip.data(), port.data(), hints, &result)) !=
-        0)
+    if ((status = m_syscalls_wrapper->getaddrinfoSyscall(
+                 ip.data(), std::to_string(port).c_str(), hints, &result)) != 0)
     {
         return std::unexpected(status);
     }

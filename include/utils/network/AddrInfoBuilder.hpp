@@ -13,10 +13,10 @@ public:
     AddrInfoBuilder();
 
     AddrInfoBuilder&
-    setSockType(SocketType sock_type);
+    setSockType(SocketType socket_type);
 
     AddrInfoBuilder&
-    setProtocolFamily(ProtocolFamily family);
+    setProtocolFamily(ProtocolFamily protocol_family);
 
     AddrInfoBuilder&
     setFlags(const int flags);

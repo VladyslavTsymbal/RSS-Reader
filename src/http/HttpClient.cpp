@@ -8,7 +8,6 @@
 #include "utils/Log.hpp"                // for LOG_ERROR
 #include "utils/network/StatusCode.hpp" // for StatusCode
 
-#include <format>      // for format
 #include <string>      // for string
 #include <string_view> // for string_view
 

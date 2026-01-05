@@ -196,14 +196,14 @@ HttpRequestBuilder::buildFromString(std::string_view request_sv)
 
 HttpRequest::HttpRequest(
         std::string host,
-        std::string uri,
+        std::string request_target,
         HttpHeaders headers,
-        HttpRequestMethod method,
+        HttpRequestMethod request_method,
         std::optional<ConnectionType> connection_type)
     : m_host(std::move(host))
-    , m_uri(std::move(uri))
+    , m_request_target(std::move(request_target))
     , m_headers(std::move(headers))
-    , m_method{method}
+    , m_request_method{request_method}
     , m_connection_type(std::move(connection_type))
 {
 }
@@ -211,13 +211,13 @@ HttpRequest::HttpRequest(
 HttpRequestMethod
 HttpRequest::getRequestMethod() const
 {
-    return m_method;
+    return m_request_method;
 }
 
 std::string_view
 HttpRequest::getRequestTarget() const
 {
-    return m_uri;
+    return m_request_target;
 }
 
 std::string_view
@@ -241,7 +241,7 @@ HttpRequest::getHeader(std::string_view key) const
 std::string
 HttpRequest::toString() const
 {
-    const auto request_method = requestMethodToString(m_method);
+    const auto request_method = requestMethodToString(m_request_method);
     if (!request_method)
     {
         return {};
@@ -253,7 +253,7 @@ HttpRequest::toString() const
             "{3}"
             "{4}",
             *request_method,
-            m_uri,
+            m_request_target,
             HTTP_1_1,
             headers,
             CRLF);

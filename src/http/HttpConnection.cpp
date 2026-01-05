@@ -30,9 +30,9 @@ HttpConnection::HttpConnection(TcpSocket socket, std::shared_ptr<INetworkUtils> 
 }
 
 HttpConnection::HttpConnection(HttpConnection&& other) noexcept
+    : m_socket(std::move(other.m_socket))
+    , m_network_utils(std::move(other.m_network_utils))
 {
-    m_socket = std::move(other.m_socket);
-    m_network_utils = std::move(other.m_network_utils);
 }
 
 HttpConnection&

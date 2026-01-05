@@ -13,19 +13,19 @@ class NetworkUtils : public INetworkUtils
 public:
     NetworkUtils() = default;
 
-    NetworkUtils(std::shared_ptr<ISysCallsWrapper> syscalls_wrapper);
+    NetworkUtils(std::shared_ptr<ISysCallsWrapper>);
 
     std::optional<TcpSocket>
-    createTcpSocket(const addrinfo* addr) override;
+    createTcpSocket(const AddrInfoPtr& info) override;
 
     StatusCode
     connectSocket(const TcpSocket& socket, const addrinfo* info) override;
 
     std::optional<TcpSocket>
-    acceptSocket(const TcpSocket&, const AddrInfoPtr&) const override;
+    acceptSocket(const TcpSocket& socket, const AddrInfoPtr& info) const override;
 
     std::expected<AddrInfoPtr, int>
-    getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) override;
+    getAddrInfo(std::string_view ip, Port port, const addrinfo*) override;
 
     StatusCode
     sendBytes(const TcpSocket& socket, BytesView bytes) const override;

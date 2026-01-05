@@ -7,11 +7,10 @@
 
 namespace http {
 
-class HttpRequest;
-
 class IHttpConnection
 {
 public:
+    IHttpConnection() = default;
     virtual ~IHttpConnection() = default;
 
     IHttpConnection(const IHttpConnection&) = delete;
@@ -29,9 +28,6 @@ public:
 
     virtual void
     closeConnection() = 0;
-
-protected:
-    IHttpConnection() = default;
 };
 
 } // namespace http

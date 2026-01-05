@@ -80,7 +80,7 @@ HttpServer::init()
                                .build();
 
     auto addrinfo =
-            m_network_utils->getAddrInfo(m_ip, std::to_string(m_port), &hints)
+            m_network_utils->getAddrInfo(m_ip, m_port, &hints)
                     .transform([this](AddrInfoPtr addrinfo) { m_addrinfo = std::move(addrinfo); });
     if (!addrinfo)
     {
@@ -88,7 +88,7 @@ HttpServer::init()
         return false;
     }
 
-    auto socket = m_network_utils->createTcpSocket(m_addrinfo.get());
+    auto socket = m_network_utils->createTcpSocket(m_addrinfo);
     if (!socket)
     {
         LOG_ERROR(LOG_TAG, "createTcpSocket failed: {}", ::strerror(errno));
@@ -187,8 +187,7 @@ HttpServer::run()
 std::unique_ptr<IHttpConnection>
 HttpServer::acceptConnection() const
 {
-    auto socket = m_network_utils->acceptSocket(m_server_socket, m_addrinfo);
-    if (socket)
+    if (auto socket = m_network_utils->acceptSocket(m_server_socket, m_addrinfo); socket)
     {
         return m_connection_factory->createConnection(std::move(*socket));
     }

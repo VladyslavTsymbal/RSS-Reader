@@ -8,6 +8,7 @@
 #include "utils/network/SocketType.hpp"
 #include "utils/network/StatusCode.hpp"
 #include "utils/Log.hpp"
+#include "utils/network/Types.hpp"
 
 namespace {
 
@@ -32,21 +33,21 @@ HttpConnectionFactory::HttpConnectionFactory(std::shared_ptr<INetworkUtils> netw
 }
 
 std::unique_ptr<IHttpConnection>
-HttpConnectionFactory::createConnection(std::string_view ip, const unsigned int port)
+HttpConnectionFactory::createConnection(std::string_view ip, utils::network::Port port)
 {
     const auto hints = AddrInfoBuilder()
                                .setProtocolFamily(ProtocolFamily::UNSPECIFIED)
                                .setSockType(SocketType::TCP)
                                .build();
 
-    auto addr_info = m_network_utils->getAddrInfo(ip, std::to_string(port), &hints);
+    auto addr_info = m_network_utils->getAddrInfo(ip, port, &hints);
     if (!addr_info)
     {
         LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", gai_strerror(addr_info.error()));
         return nullptr;
     }
 
-    auto socket = m_network_utils->createTcpSocket(addr_info.value().get());
+    auto socket = m_network_utils->createTcpSocket(addr_info.value());
     if (!socket)
     {
         LOG_ERROR(LOG_TAG, "createSocket failed: {}", strerror(errno));

@@ -24,7 +24,7 @@ public:
 
     HttpServer(
             std::string ip,
-            const unsigned int port,
+            utils::network::Port port,
             std::shared_ptr<utils::network::INetworkUtils> network_utils,
             std::shared_ptr<http::HttpConnectionFactory> connection_factory);
     ~HttpServer();
@@ -53,7 +53,7 @@ private:
 
 private:
     const std::string m_ip;
-    const unsigned int m_port;
+    utils::network::Port m_port;
     std::shared_ptr<utils::network::INetworkUtils> m_network_utils;
     utils::network::TcpSocket m_server_socket;
     utils::network::AddrInfoPtr m_addrinfo;

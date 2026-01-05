@@ -16,25 +16,22 @@ public:
     virtual ~INetworkUtils() = default;
 
     virtual std::optional<TcpSocket>
-    createTcpSocket(const addrinfo*) = 0;
+    createTcpSocket(const AddrInfoPtr& info) = 0;
 
     virtual StatusCode
-    connectSocket(const TcpSocket&, const addrinfo*) = 0;
+    connectSocket(const TcpSocket& socket, const addrinfo* info) = 0;
 
     virtual std::optional<TcpSocket>
-    acceptSocket(const TcpSocket&, const AddrInfoPtr&) const = 0;
+    acceptSocket(const TcpSocket& socket, const AddrInfoPtr& info) const = 0;
 
     virtual std::expected<AddrInfoPtr, int>
-    getAddrInfo(std::string_view ip, std::string_view port, const addrinfo* hints) = 0;
+    getAddrInfo(std::string_view ip, Port port, const addrinfo* info) = 0;
 
     virtual StatusCode
-    sendBytes(const TcpSocket&, BytesView) const = 0;
+    sendBytes(const TcpSocket& socket, BytesView bytes) const = 0;
 
     virtual std::expected<Bytes, StatusCode>
-    receiveBytes(const TcpSocket&) const = 0;
-
-protected:
-    INetworkUtils() = default;
+    receiveBytes(const TcpSocket& socket) const = 0;
 };
 
 } // namespace utils::network

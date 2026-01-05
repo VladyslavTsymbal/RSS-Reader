@@ -12,12 +12,13 @@ using utils::network::AddrInfoPtr;
 using utils::network::TcpSocket;
 using utils::network::Bytes;
 using utils::network::BytesView;
+using utils::network::Port;
 
 struct MockNetworkUtils : public utils::network::INetworkUtils
 {
-    MOCK_METHOD(std::optional<TcpSocket>, createTcpSocket, (const addrinfo* addr), (override));
+    MOCK_METHOD(std::optional<TcpSocket>, createTcpSocket, (const AddrInfoPtr& addr), (override));
 
-    MOCK_METHOD(StatusCode, connectSocket, (const TcpSocket&, const addrinfo* info), (override));
+    MOCK_METHOD(StatusCode, connectSocket, (const TcpSocket&, const AddrInfoPtr& info), (override));
 
     MOCK_METHOD(
             std::optional<TcpSocket>,
@@ -36,7 +37,7 @@ struct MockNetworkUtils : public utils::network::INetworkUtils
     MOCK_METHOD(
             (std::expected<AddrInfoPtr, int>),
             getAddrInfo,
-            (std::string_view, std::string_view, const addrinfo*),
+            (std::string_view, Port port, const AddrInfoPtr&),
             (override));
 };
 

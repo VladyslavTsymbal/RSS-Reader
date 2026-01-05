@@ -26,24 +26,25 @@ public:
     std::optional<const ConnectionType>
     getConnectionType() const;
 
-    std::optional<std::string_view> getHeader(std::string_view) const;
+    std::optional<std::string_view>
+    getHeader(std::string_view key) const;
 
     std::string
     toString() const;
 
 private:
     HttpRequest(
-            std::string,
-            std::string,
-            HttpHeaders,
-            HttpRequestMethod,
-            std::optional<ConnectionType>);
+            std::string host,
+            std::string request_target,
+            HttpHeaders headers,
+            HttpRequestMethod request_method,
+            std::optional<ConnectionType> connection_type);
 
 private:
     const std::string m_host;
-    const std::string m_uri;
+    const std::string m_request_target;
     const HttpHeaders m_headers;
-    const HttpRequestMethod m_method;
+    const HttpRequestMethod m_request_method;
     std::optional<const ConnectionType> m_connection_type;
     // TODO: Implement body
     // std::optional<std::string> m_body;
@@ -63,11 +64,13 @@ public:
     std::optional<HttpRequest>
     build();
 
-    std::optional<HttpRequest> buildFromString(std::string_view);
+    std::optional<HttpRequest>
+    buildFromString(std::string_view request_str);
 
 private:
     // Returns start of the headers or npos
-    size_t parseRequestLine(std::string_view);
+    size_t
+    parseRequestLine(std::string_view data);
 
     bool
     isValid() const;

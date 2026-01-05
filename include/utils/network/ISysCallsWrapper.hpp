@@ -24,9 +24,6 @@ public:
             const char* __restrict service,
             const addrinfo* __restrict req,
             addrinfo** __restrict pai) const = 0;
-
-protected:
-    ISysCallsWrapper() = default;
 };
 
 } // namespace utils::network

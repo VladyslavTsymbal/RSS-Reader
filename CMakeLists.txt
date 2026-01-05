@@ -30,7 +30,7 @@ target_compile_options (http-server PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set (libs_to_link)
 
 # Fetch and populate dependencies
-include (cmake/openssl.cmake)
+#include (cmake/openssl.cmake)
 include (cmake/spdlog.cmake)
 include (cmake/boost.cmake)
 

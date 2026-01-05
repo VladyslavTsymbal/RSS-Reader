@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/network/TcpSocket.hpp"
+#include "utils/network/Types.hpp"
 
 #include <memory>
 #include <string_view>
@@ -20,7 +21,7 @@ public:
     HttpConnectionFactory(std::shared_ptr<utils::network::INetworkUtils> network_utils);
 
     std::unique_ptr<IHttpConnection>
-    createConnection(std::string_view ip, const unsigned int port);
+    createConnection(std::string_view ip, utils::network::Port port);
 
     std::unique_ptr<IHttpConnection>
     createConnection(utils::network::TcpSocket socket);

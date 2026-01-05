@@ -39,7 +39,7 @@ private:
     parseResponse(std::string response);
 
     std::optional<StatusLine>
-    parseStatusLine(std::string_view sv);
+    parseStatusLine(std::string_view data);
 
     std::optional<size_t>
     getContentLengthValue() const;
