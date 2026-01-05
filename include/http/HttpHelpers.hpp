@@ -1,7 +1,6 @@
 #pragma once
 
 #include "http/Types.hpp"
-#include "http/HttpRequestMethod.hpp"
 
 #include <optional>
 

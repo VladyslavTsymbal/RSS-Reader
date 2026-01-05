@@ -19,6 +19,12 @@ struct MockNetworkUtils : public utils::network::INetworkUtils
 
     MOCK_METHOD(StatusCode, connectSocket, (const TcpSocket&, const addrinfo* info), (override));
 
+    MOCK_METHOD(
+            std::optional<TcpSocket>,
+            acceptSocket,
+            (const TcpSocket&, const AddrInfoPtr&),
+            (override, const));
+
     MOCK_METHOD(StatusCode, sendBytes, (const TcpSocket&, BytesView), (override, const));
 
     MOCK_METHOD(

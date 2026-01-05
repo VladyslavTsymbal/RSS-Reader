@@ -9,6 +9,8 @@ set (TEST_SRCS ${_TEST_SRCS}
                src/http/HttpConnection.cpp
                src/http/HttpConnectionFactory.cpp
                src/http/HttpHelpers.cpp
+               src/http/ConnectionType.cpp
+               src/http/HttpRequestMethod.cpp
                src/utils/network/Socket.cpp
                src/utils/network/StatusCode.cpp
                src/utils/network/NetworkUtils.cpp
