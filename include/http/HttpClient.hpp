@@ -7,7 +7,6 @@ namespace http {
 
 class HttpResponse;
 class HttpRequest;
-class IHttpConnection;
 class HttpConnectionFactory;
 
 class HttpClient

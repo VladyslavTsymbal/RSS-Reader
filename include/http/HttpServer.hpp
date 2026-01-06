@@ -1,20 +1,24 @@
 #pragma once
 
-#include "utils/network/Types.hpp"
-#include "utils/network/TcpSocket.hpp"
+#include "network/Types.hpp"
+#include "network/TcpSocket.hpp"
+#include "network/StatusCode.hpp"
 
 #include <string>
 #include <memory>
+#include <sys/poll.h>
+#include <unordered_map>
+#include <expected>
 
-namespace utils::network {
+namespace network {
 class TcpSocket;
 class INetworkUtils;
-} // namespace utils::network
+} // namespace network
 
 namespace http {
 
-class IHttpConnection;
 class HttpConnectionFactory;
+class HttpConnectionHandler;
 class HttpRequest;
 
 class HttpServer
@@ -24,8 +28,8 @@ public:
 
     HttpServer(
             std::string ip,
-            utils::network::Port port,
-            std::shared_ptr<utils::network::INetworkUtils> network_utils,
+            network::Port port,
+            std::shared_ptr<network::INetworkUtils> network_utils,
             std::shared_ptr<http::HttpConnectionFactory> connection_factory);
     ~HttpServer();
 
@@ -42,22 +46,54 @@ public:
     isRunning() const;
 
 private:
-    std::unique_ptr<http::IHttpConnection>
-    acceptConnection() const;
+    using Fd = int;
+    using FdVec = std::vector<Fd>;
 
-    std::string
-    createResponse(const HttpRequest&) const;
+    std::expected<int, network::StatusCode>
+    acceptConnection();
 
-    bool
-    shouldCloseConnection(const HttpRequest&) const;
+    void
+    closeConnection(const Fd fd);
+
+    void
+    addPollFd(const Fd fd);
+
+    void
+    removePollFd(const Fd fd);
+
+    void
+    handlePollEvents();
+
+    void
+    handleAcceptEvent(FdVec& fds_to_add);
+
+    void
+    handleReadEvent(const Fd fd, FdVec& fds_to_remove);
+
+    void
+    handleWriteEvent(const Fd fd);
+
+    void
+    handleCloseEvent(const Fd fd, FdVec& fds_to_remove);
+
+    void
+    scheduleTask(const Fd fd);
+
+    void
+    removeTask(const Fd fd);
+
+    void
+    processTasks();
 
 private:
     const std::string m_ip;
-    utils::network::Port m_port;
-    std::shared_ptr<utils::network::INetworkUtils> m_network_utils;
-    utils::network::TcpSocket m_server_socket;
-    utils::network::AddrInfoPtr m_addrinfo;
+    network::Port m_port;
+    std::shared_ptr<network::INetworkUtils> m_network_utils;
+    network::TcpSocket m_server_socket;
     std::shared_ptr<http::HttpConnectionFactory> m_connection_factory;
+    std::vector<pollfd> m_poll_fds;
+    std::unordered_map<Fd, std::shared_ptr<HttpConnectionHandler>> m_connections;
+    FdVec m_pending_tasks_fd;
     bool m_initialized{false};
     bool m_running{false};
 };

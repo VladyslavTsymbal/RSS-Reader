@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/LoggerImpl.hpp"
+#include "utils/log/LoggerImpl.hpp"
 
 using utils::LoggerImpl;
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "utils/network/ISysCallsWrapper.hpp"
+#include "network/ISysCallsWrapper.hpp"
 
 #include <sys/socket.h> // for socklen_t
 
 struct addrinfo;
 
-namespace utils::network {
+namespace network {
 
 class SysCallsWrapper : public ISysCallsWrapper
 {
@@ -31,4 +31,4 @@ public:
             addrinfo** __restrict pai) const override;
 };
 
-} // namespace utils::network
+} // namespace network

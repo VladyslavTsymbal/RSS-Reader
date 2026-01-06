@@ -1,10 +1,11 @@
 #pragma once
 
-#include "utils/network/Socket.hpp"
+#include "network/Socket.hpp"
 
 #include <cassert>
+#include <memory>
 
-namespace utils::network {
+namespace network {
 
 class TcpSocket
 {
@@ -14,7 +15,7 @@ public:
     TcpSocket(Socket socket)
         : m_socket(std::move(socket))
     {
-        assert(m_socket.isValid());
+        assert(!m_socket.isClosed());
     }
 
     TcpSocket(const TcpSocket&) = delete;
@@ -41,11 +42,11 @@ public:
     bool
     isValid() const noexcept
     {
-        return m_socket.isValid();
+        return !m_socket.isClosed();
     }
 
 private:
     Socket m_socket;
 };
 
-} // namespace utils::network
+} // namespace network

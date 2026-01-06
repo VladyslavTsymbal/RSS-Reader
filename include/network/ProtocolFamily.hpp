@@ -2,7 +2,7 @@
 
 #include <sys/socket.h> // for AF_INET, AF_INET6, AF_UNSPEC
 
-namespace utils::network {
+namespace network {
 
 enum class ProtocolFamily : int
 {
@@ -11,4 +11,4 @@ enum class ProtocolFamily : int
     UNSPECIFIED = AF_UNSPEC // Both allowed
 };
 
-} // namespace utils::network
+} // namespace network

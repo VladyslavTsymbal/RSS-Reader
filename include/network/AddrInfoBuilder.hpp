@@ -1,11 +1,11 @@
 #pragma once
 
-#include "utils/network/SocketType.hpp"
-#include "utils/network/ProtocolFamily.hpp"
+#include "network/SocketType.hpp"
+#include "network/ProtocolFamily.hpp"
 
 #include <netdb.h> // for addrinfo
 
-namespace utils::network {
+namespace network {
 
 class AddrInfoBuilder
 {
@@ -27,4 +27,5 @@ public:
 private:
     addrinfo m_addrinfo;
 };
-} // namespace utils::network
+
+} // namespace network

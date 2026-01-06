@@ -1,33 +1,32 @@
 #pragma once
 
-#include "utils/network/TcpSocket.hpp"
-#include "utils/network/Types.hpp"
+#include "network/TcpSocket.hpp"
+#include "network/Types.hpp"
 
 #include <memory>
 #include <string_view>
 
-namespace utils::network {
+namespace network {
 class INetworkUtils;
-} // namespace utils::network
+class TcpConnection;
+} // namespace network
 
 namespace http {
-
-class IHttpConnection;
 
 class HttpConnectionFactory
 {
 public:
     HttpConnectionFactory() = delete;
-    HttpConnectionFactory(std::shared_ptr<utils::network::INetworkUtils> network_utils);
+    HttpConnectionFactory(std::shared_ptr<network::INetworkUtils> network_utils);
 
-    std::unique_ptr<IHttpConnection>
-    createConnection(std::string_view ip, utils::network::Port port);
+    std::unique_ptr<network::TcpConnection>
+    createTcpConnection(std::string_view ip, network::Port port);
 
-    std::unique_ptr<IHttpConnection>
-    createConnection(utils::network::TcpSocket socket);
+    std::unique_ptr<network::TcpConnection>
+    createTcpConnection(network::TcpSocket socket);
 
 protected:
-    std::shared_ptr<utils::network::INetworkUtils> m_network_utils;
+    std::shared_ptr<network::INetworkUtils> m_network_utils;
 };
 
 } // namespace http

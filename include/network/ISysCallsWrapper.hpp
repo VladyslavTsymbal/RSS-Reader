@@ -2,7 +2,7 @@
 
 #include <netdb.h>
 
-namespace utils::network {
+namespace network {
 
 class ISysCallsWrapper
 {
@@ -26,4 +26,4 @@ public:
             addrinfo** __restrict pai) const = 0;
 };
 
-} // namespace utils::network
+} // namespace network

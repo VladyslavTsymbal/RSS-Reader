@@ -6,15 +6,14 @@ set (TEST_SRCS ${_TEST_SRCS}
                src/http/HttpClient.cpp
                src/http/HttpRequest.cpp
                src/http/HttpResponse.cpp
-               src/http/HttpConnection.cpp
                src/http/HttpConnectionFactory.cpp
                src/http/HttpHelpers.cpp
                src/http/ConnectionType.cpp
                src/http/HttpRequestMethod.cpp
-               src/utils/network/Socket.cpp
-               src/utils/network/StatusCode.cpp
-               src/utils/network/NetworkUtils.cpp
-               src/utils/network/AddrInfoBuilder.cpp)
+               src/network/Socket.cpp
+               src/network/StatusCode.cpp
+               src/network/NetworkUtils.cpp
+               src/network/AddrInfoBuilder.cpp)
 
 add_executable (
     rss_reader_tests

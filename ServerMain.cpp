@@ -1,8 +1,8 @@
 #include "http/HttpConnectionFactory.hpp"
 #include "http/HttpServer.hpp"
-#include "utils/network/NetworkUtils.hpp"
-#include "utils/network/SysCallsWrapper.hpp"
-#include "utils/Log.hpp"
+#include "network/NetworkUtils.hpp"
+#include "network/SysCallsWrapper.hpp"
+#include "utils/log/Log.hpp"
 
 namespace {
 constexpr std::string_view LOG_TAG = "ServerMain";
@@ -13,13 +13,12 @@ main()
 {
     using namespace http;
 
-    auto syscall_wrappers = std::make_shared<utils::network::SysCallsWrapper>();
-    auto network_utils =
-            std::make_shared<utils::network::NetworkUtils>(std::move(syscall_wrappers));
+    auto syscall_wrappers = std::make_shared<network::SysCallsWrapper>();
+    auto network_utils = std::make_shared<network::NetworkUtils>(std::move(syscall_wrappers));
     auto connection_factory = std::make_shared<http::HttpConnectionFactory>(network_utils);
 
     HttpServer http_server(
-            "127.0.0.1", 8080, std::move(network_utils), std::move(connection_factory));
+            "0.0.0.0", 8080, std::move(network_utils), std::move(connection_factory));
     const bool is_server_inited = http_server.init();
     if (!is_server_inited)
     {

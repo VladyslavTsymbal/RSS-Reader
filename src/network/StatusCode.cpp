@@ -1,8 +1,8 @@
-#include "utils/network/StatusCode.hpp"
+#include "network/StatusCode.hpp"
 
 #include <unordered_map>
 
-namespace utils::network {
+namespace network {
 
 std::string_view
 statusCodeToError(const StatusCode code)
@@ -23,4 +23,4 @@ statusCodeToError(const StatusCode code)
     return "Not known status code";
 }
 
-} // namespace utils::network
+} // namespace network

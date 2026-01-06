@@ -1,9 +1,9 @@
-#include "utils/network/SysCallsWrapper.hpp"
+#include "network/SysCallsWrapper.hpp"
 
 #include <netdb.h> // for addrinfo (ptr only), getaddrinfo
 #include <sys/socket.h>
 
-namespace utils::network {
+namespace network {
 
 int
 SysCallsWrapper::socketSyscall(int domain, int type, int protocol) const
@@ -33,4 +33,4 @@ SysCallsWrapper::getaddrinfoSyscall(
     return ::getaddrinfo(name, service, req, pai);
 }
 
-} // namespace utils::network
+} // namespace network

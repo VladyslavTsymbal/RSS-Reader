@@ -1,6 +1,8 @@
-#include "utils/network/Socket.hpp"
+#include "network/Socket.hpp"
 
-namespace utils::network {
+#include <algorithm>
+
+namespace network {
 
 Socket::Socket(const int descriptor) noexcept
     : m_descriptor(descriptor)
@@ -9,7 +11,7 @@ Socket::Socket(const int descriptor) noexcept
 
 Socket::~Socket()
 {
-    if (isValid())
+    if (!isClosed())
     {
         ::close(m_descriptor);
     }
@@ -43,19 +45,19 @@ Socket::fd() const noexcept
 }
 
 bool
-Socket::isValid() const
+Socket::isClosed() const
 {
-    return m_descriptor >= 0;
+    return m_descriptor == -1;
 }
 
 void
-Socket::close() noexcept
+Socket::close()
 {
-    if (isValid())
+    if (!isClosed())
     {
         ::close(m_descriptor);
         m_descriptor = -1;
     }
 }
 
-} // namespace utils::network
+} // namespace network

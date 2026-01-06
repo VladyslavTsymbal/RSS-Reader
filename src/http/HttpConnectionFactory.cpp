@@ -1,26 +1,28 @@
 #include "http/HttpConnectionFactory.hpp"
-#include "http/HttpConnection.hpp"
 
-#include "utils/network/ProtocolFamily.hpp"
-#include "utils/network/Socket.hpp"
-#include "utils/network/INetworkUtils.hpp"
-#include "utils/network/AddrInfoBuilder.hpp"
-#include "utils/network/SocketType.hpp"
-#include "utils/network/StatusCode.hpp"
-#include "utils/Log.hpp"
-#include "utils/network/Types.hpp"
+#include "network/ProtocolFamily.hpp"
+#include "network/INetworkUtils.hpp"
+#include "network/AddrInfoBuilder.hpp"
+#include "network/SocketType.hpp"
+#include "network/StatusCode.hpp"
+#include "network/Types.hpp"
+#include "network/TcpConnection.hpp"
+#include "network/TcpSocket.hpp"
+
+#include "utils/log/Log.hpp"
 
 namespace {
 
 constexpr std::string_view LOG_TAG = "HttpConnectionFactory";
 
-using utils::network::INetworkUtils;
-using utils::network::AddrInfoBuilder;
-using utils::network::StatusCode;
-using utils::network::TcpSocket;
-using utils::network::Socket;
-using utils::network::ProtocolFamily;
-using utils::network::SocketType;
+using network::INetworkUtils;
+using network::AddrInfoBuilder;
+using network::StatusCode;
+using network::TcpSocket;
+using network::TcpConnection;
+using network::Socket;
+using network::ProtocolFamily;
+using network::SocketType;
 
 } // namespace
 
@@ -32,8 +34,8 @@ HttpConnectionFactory::HttpConnectionFactory(std::shared_ptr<INetworkUtils> netw
     assert(m_network_utils);
 }
 
-std::unique_ptr<IHttpConnection>
-HttpConnectionFactory::createConnection(std::string_view ip, utils::network::Port port)
+std::unique_ptr<TcpConnection>
+HttpConnectionFactory::createTcpConnection(std::string_view ip, network::Port port)
 {
     const auto hints = AddrInfoBuilder()
                                .setProtocolFamily(ProtocolFamily::UNSPECIFIED)
@@ -47,7 +49,7 @@ HttpConnectionFactory::createConnection(std::string_view ip, utils::network::Por
         return nullptr;
     }
 
-    auto socket = m_network_utils->createTcpSocket(addr_info.value());
+    auto socket = m_network_utils->createTcpSocket(*addr_info);
     if (!socket)
     {
         LOG_ERROR(LOG_TAG, "createSocket failed: {}", strerror(errno));
@@ -55,7 +57,7 @@ HttpConnectionFactory::createConnection(std::string_view ip, utils::network::Por
     }
 
     LOG_INFO(LOG_TAG, "Connecting to: {}", ip);
-    const auto is_connected = m_network_utils->connectSocket(*socket, addr_info.value().get());
+    const auto is_connected = m_network_utils->connectSocket(*socket, *addr_info);
     if (is_connected == StatusCode::FAIL)
     {
         LOG_ERROR(LOG_TAG, "connectSocket failed: {}", strerror(errno));
@@ -63,13 +65,13 @@ HttpConnectionFactory::createConnection(std::string_view ip, utils::network::Por
     }
 
     LOG_INFO(LOG_TAG, "Connected successfully ({})", ip);
-    return std::make_unique<HttpConnection>(std::move(*socket), m_network_utils);
+    return std::make_unique<TcpConnection>(std::move(*socket), m_network_utils);
 }
 
-std::unique_ptr<IHttpConnection>
-HttpConnectionFactory::createConnection(TcpSocket socket)
+std::unique_ptr<TcpConnection>
+HttpConnectionFactory::createTcpConnection(TcpSocket socket)
 {
-    return std::make_unique<HttpConnection>(std::move(socket), m_network_utils);
+    return std::make_unique<TcpConnection>(std::move(socket), m_network_utils);
 }
 
 } // namespace http

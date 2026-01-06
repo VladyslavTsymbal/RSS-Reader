@@ -1,49 +1,35 @@
 #include "http/HttpServer.hpp"
-#include "http/ConnectionType.hpp"
-#include "http/Constants.hpp"
 #include "http/HttpConnectionFactory.hpp"
-#include "http/HttpRequest.hpp"
-#include "http/HttpRequestMethod.hpp"
-#include "http/HttpResponse.hpp"
-#include "http/IHttpConnection.hpp"
+#include "http/HttpConnectionHandler.hpp"
+#include "http/HttpConnectionState.hpp"
 
-#include "utils/network/AddrInfoBuilder.hpp"
-#include "utils/Log.hpp" // for LOG_ERROR
-#include "utils/network/StatusCode.hpp"
-#include "utils/network/TcpSocket.hpp"
-#include "utils/network/INetworkUtils.hpp"
-#include "utils/network/Types.hpp"
-#include "utils/network/ProtocolFamily.hpp"
-#include "utils/network/SocketType.hpp"
+#include "network/AddrInfoBuilder.hpp"
+#include "network/StatusCode.hpp"
+#include "network/INetworkUtils.hpp"
+#include "network/Types.hpp"
+#include "network/ProtocolFamily.hpp"
+#include "network/SocketType.hpp"
+#include "network/TcpConnection.hpp"
+#include "utils/log/Log.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <netdb.h>
-#include <fstream>
+#include <sys/types.h>
+#include <fcntl.h>
 
 namespace {
 
 constexpr std::string_view LOG_TAG = "HttpServer";
-constexpr auto MAX_REQUESTS = 6;
+constexpr int POLL_TIMEOUT = 100;
 
-using utils::network::Socket;
-using utils::network::TcpSocket;
-using utils::network::INetworkUtils;
-using utils::network::StatusCode;
-using utils::network::AddrInfoBuilder;
-using utils::network::AddrInfoPtr;
-using utils::network::ProtocolFamily;
-using utils::network::SocketType;
-
-constexpr std::string_view HTMX_RESPONSE =
-        R"(
-                <html>
-                <head><script src="https://unpkg.com/htmx.org"></script></head>
-                <body>
-                    <button hx-get="/feed.xml" hx-target="#result">Get Feed</button>
-                    <div id="result"></div>
-                </body>
-                </html>
-            )";
+using Port = network::Port;
+using network::INetworkUtils;
+using network::StatusCode;
+using network::AddrInfoBuilder;
+using network::AddrInfoPtr;
+using network::ProtocolFamily;
+using network::SocketType;
 
 } // namespace
 
@@ -53,7 +39,7 @@ namespace http {
 
 HttpServer::HttpServer(
         std::string ip,
-        const unsigned int port,
+        Port port,
         std::shared_ptr<INetworkUtils> network_utils,
         std::shared_ptr<HttpConnectionFactory> connection_factory)
     : m_ip(std::move(ip))
@@ -79,16 +65,14 @@ HttpServer::init()
                                .setFlags(AI_PASSIVE)
                                .build();
 
-    auto addrinfo =
-            m_network_utils->getAddrInfo(m_ip, m_port, &hints)
-                    .transform([this](AddrInfoPtr addrinfo) { m_addrinfo = std::move(addrinfo); });
+    auto addrinfo = m_network_utils->getAddrInfo(m_ip, m_port, &hints);
     if (!addrinfo)
     {
         LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", ::gai_strerror(addrinfo.error()));
         return false;
     }
 
-    auto socket = m_network_utils->createTcpSocket(m_addrinfo);
+    auto socket = m_network_utils->createTcpSocket(*addrinfo);
     if (!socket)
     {
         LOG_ERROR(LOG_TAG, "createTcpSocket failed: {}", ::strerror(errno));
@@ -98,15 +82,26 @@ HttpServer::init()
 
     LOG_INFO(LOG_TAG, "Socket binding...");
     const int bind_status =
-            ::bind(m_server_socket.fd(), m_addrinfo->ai_addr, m_addrinfo->ai_addrlen);
+            ::bind(m_server_socket.fd(), addrinfo->get()->ai_addr, addrinfo->get()->ai_addrlen);
     if (bind_status)
     {
         LOG_ERROR(LOG_TAG, "Socket binding failed: {}", ::strerror(errno));
         return false;
     }
 
+    int flags = fcntl(m_server_socket.fd(), F_GETFL, 0);
+    if (flags == -1)
+    {
+        // TODO: handle error
+    }
+
+    if (fcntl(m_server_socket.fd(), F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        // TODO: handle error
+    }
+
     LOG_INFO(LOG_TAG, "Call `listen` for the socket.");
-    const int listen_status = ::listen(m_server_socket.fd(), MAX_REQUESTS);
+    const int listen_status = ::listen(m_server_socket.fd(), SOMAXCONN);
     if (listen_status)
     {
         LOG_ERROR(LOG_TAG, "`Listen` failed: {}", ::strerror(errno));
@@ -123,17 +118,15 @@ HttpServer::init()
         return false;
     }
 
+    addPollFd(m_server_socket.fd());
     m_initialized = true;
+
     return true;
 }
 
 void
 HttpServer::run()
 {
-    // Currently, this is a straight-forward implementation.
-    // TODO: Remove hardcoded stuff, like sending
-    // the specific file, etc.
-    using utils::network::statusCodeToError;
     if (!m_initialized)
     {
         LOG_ERROR(LOG_TAG, "Server can't be started because of failed initialization.");
@@ -143,115 +136,222 @@ HttpServer::run()
     m_running = true;
     while (m_running)
     {
-        auto new_connection = acceptConnection();
-        if (!new_connection)
+        const int poll_events = ::poll(m_poll_fds.data(), m_poll_fds.size(), POLL_TIMEOUT);
+        if (poll_events < 0)
         {
-            LOG_ERROR(LOG_TAG, "Failed to accept the client: {}", ::strerror(errno));
-            continue;
+            LOG_ERROR(LOG_TAG, "Stopping. Poll ended with an error: {}", ::strerror(errno));
+            m_running = false;
+        }
+        else if (poll_events > 0)
+        {
+            handlePollEvents();
         }
 
-        LOG_INFO(LOG_TAG, "Client accepted! Creating the connection.");
-        auto request_data = new_connection->receiveData();
-        if (!request_data)
-        {
-            const StatusCode error = request_data.error();
-            LOG_ERROR(LOG_TAG, statusCodeToError(error));
-            continue;
-        }
-
-        const auto request = HttpRequestBuilder().buildFromString(*request_data);
-        if (!request)
-        {
-            LOG_ERROR(LOG_TAG, "Failed to convert received data to the valid HttpRequest");
-            continue;
-        }
-
-        const auto response = createResponse(*request);
-        const StatusCode status = new_connection->sendData(response);
-
-        if (status != StatusCode::OK)
-        {
-            LOG_ERROR(LOG_TAG, statusCodeToError(status));
-            continue;
-        }
-
-        if (shouldCloseConnection(*request))
-        {
-            new_connection->closeConnection();
-        }
-
-        LOG_INFO(LOG_TAG, "The data was sent successfully.");
+        processTasks();
     }
 }
 
-std::unique_ptr<IHttpConnection>
-HttpServer::acceptConnection() const
+void
+HttpServer::handlePollEvents()
 {
-    if (auto socket = m_network_utils->acceptSocket(m_server_socket, m_addrinfo); socket)
+    // LOG_DEBUG(LOG_TAG, "{} start", __FUNCTION__);
+
+    const auto isReadEvent = [](const short revents) { return (revents & POLLIN); };
+    const auto isWriteEvent = [](const short revents) { return (revents & POLLOUT); };
+    const auto isCloseEvent = [](const short revents) { return (revents & POLLHUP); };
+    const auto isAcceptEvent = [](const int server_fd, const int fd, const short revents) {
+        return fd == server_fd && (revents & POLLIN);
+    };
+
+    FdVec fds_to_add;
+    FdVec fds_to_remove;
+
+    for (const auto& [fd, events, revents] : m_poll_fds)
     {
-        return m_connection_factory->createConnection(std::move(*socket));
+        // LOG_TRACE(LOG_TAG, "Loop :D");
+
+        if (isAcceptEvent(m_server_socket.fd(), fd, revents))
+        {
+            handleAcceptEvent(fds_to_add);
+        }
+        else if (isReadEvent(revents))
+        {
+            handleReadEvent(fd, fds_to_remove);
+        }
+        else if (isWriteEvent(revents))
+        {
+            handleWriteEvent(fd);
+        }
+        else if (isCloseEvent(revents))
+        {
+            handleCloseEvent(fd, fds_to_remove);
+        }
     }
 
-    return nullptr;
+    for (const Fd fd : fds_to_add)
+    {
+        addPollFd(fd);
+    }
+
+    for (const Fd fd : fds_to_remove)
+    {
+        removePollFd(fd);
+    }
 }
 
-std::string
-HttpServer::createResponse(const HttpRequest& request) const
+void
+HttpServer::processTasks()
 {
-    // TODO: Remove this hardcode and implement HttpResponseBuilder with toString method
-    // This method should return HttpResponse or std::optional<HttpResponse>
-    std::string response_content;
-    if (request.getRequestMethod() == HttpRequestMethod::GET)
+    FdVec tasks_to_remove;
+
+    for (const Fd fd : m_pending_tasks_fd)
     {
-        if (request.getRequestTarget() == "/feed.xml")
+        const auto it = m_connections.find(fd);
+        if (it != std::end(m_connections) && (it->second != nullptr))
         {
-            std::ifstream ifile("feed.xml");
-            if (ifile.is_open())
+            auto& handler = *it->second;
+            const auto state = handler.getState();
+            if (state == HttpConnectionState::PROCESSING)
             {
-                std::stringstream ss;
-                ss << ifile.rdbuf();
-                response_content = ss.str();
+                handler.processData();
             }
-            else
+            else if (state == HttpConnectionState::WRITING)
             {
-                LOG_ERROR(LOG_TAG, "Couldn't open \"feed.xml\"");
+                const auto status = handler.writeAvailable();
+                if (status != StatusCode::OK)
+                {
+                    // Unrecoverable error
+                    tasks_to_remove.push_back(fd);
+                    closeConnection(fd);
+                }
             }
-        }
-        else
-        {
-            response_content = HTMX_RESPONSE;
         }
     }
 
-    std::string response =
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: " +
-            std::to_string(response_content.size()) +
-            "\r\n"
-            "Connection: close\r\n"
-            "\r\n" +
-            response_content;
-
-    return response;
+    for (const Fd fd : tasks_to_remove)
+    {
+        removeTask(fd);
+    }
 }
 
-bool
-HttpServer::shouldCloseConnection(const HttpRequest& request) const
+void
+HttpServer::handleAcceptEvent(FdVec& fds_to_add)
 {
-    const auto connection_type = request.getConnectionType();
-    if (!connection_type)
+    while (true)
     {
-        // In HTTP/1.1 connection should stay alive by default
-        return false;
+        if (const auto fd = acceptConnection())
+        {
+            LOG_INFO(LOG_TAG, "New connection accepted! (fd: {})", *fd);
+            fds_to_add.push_back(*fd);
+            continue;
+        }
+        else if (fd.error() == StatusCode::WOULD_BLOCK)
+        {
+            LOG_DEBUG(LOG_TAG, "No more connection left to accept.");
+            break;
+        }
+
+        LOG_ERROR(LOG_TAG, "Failed to accept an incoming connection.");
+    }
+}
+
+void
+HttpServer::handleReadEvent(const Fd fd, FdVec& fds_to_remove)
+{
+    const auto it = m_connections.find(fd);
+    if ((it == std::end(m_connections)) || (it->second == nullptr))
+    {
+        LOG_ERROR(LOG_TAG, "Failed to read data from connection. Connection is not valid.");
+        return;
     }
 
-    if (connection_type == ConnectionType::KEEP_ALIVE)
+    auto& handler = *it->second;
+    const auto status = handler.readAvailable();
+    if (status != StatusCode::OK)
     {
-        return false;
+        fds_to_remove.push_back(fd);
+        closeConnection(fd);
+    }
+}
+
+void
+HttpServer::handleWriteEvent(const Fd fd)
+{
+    const auto it = m_connections.find(fd);
+    if ((it == std::end(m_connections)) || (it->second == nullptr))
+    {
+        LOG_ERROR(LOG_TAG, "Failed to read data from connection. Connection is not valid.");
+        return;
     }
 
-    return true;
+    // auto& handler = *it->second;
+    // FIXME: Use observer pattern to notify about that write is possible
+    // state = HttpConnectionState::WRITING;
+
+    scheduleTask(fd);
+}
+
+void
+HttpServer::closeConnection(const Fd fd)
+{
+    if (const auto it = m_connections.find(fd); it == std::end(m_connections))
+    {
+        if (it->second != nullptr)
+        {
+            it->second->readAvailable();
+            m_connections.erase(it);
+            return;
+        }
+    }
+
+    LOG_ERROR(LOG_TAG, "Failed to close connection gracefully. Connection is already not valid.");
+}
+
+void
+HttpServer::handleCloseEvent(const Fd fd, FdVec& fds_to_remove)
+{
+    LOG_INFO(LOG_TAG, "Connection was closed by peer. Removing the connection.");
+    fds_to_remove.push_back(fd);
+    closeConnection(fd);
+}
+
+void
+HttpServer::scheduleTask(const Fd fd)
+{
+    m_pending_tasks_fd.push_back(fd);
+}
+
+void
+HttpServer::removeTask(const Fd fd)
+{
+    // TODO: Not optimal
+    m_pending_tasks_fd.erase(
+            std::remove(std::begin(m_pending_tasks_fd), std::end(m_pending_tasks_fd), fd),
+            std::end(m_pending_tasks_fd));
+}
+
+std::expected<int, StatusCode>
+HttpServer::acceptConnection()
+{
+    auto socket = m_network_utils->acceptSocket(m_server_socket);
+    if (!socket)
+    {
+        return std::unexpected(socket.error());
+    }
+
+    auto [tcp_socket, addr_info] = std::move(*socket);
+    // LOG_INFO(LOG_TAG, "Received connection from: {}", addr_info.)
+    const auto socket_fd = tcp_socket.fd();
+    auto tcp_connection = m_connection_factory->createTcpConnection(std::move(tcp_socket));
+
+    if (m_connections.contains(socket_fd))
+    {
+        return std::unexpected(StatusCode::FAIL);
+    }
+
+    auto handler = std::make_shared<HttpConnectionHandler>(std::move(tcp_connection));
+    m_connections.emplace(std::make_pair(socket_fd, std::move(handler)));
+    return socket_fd;
 }
 
 bool
@@ -264,6 +364,26 @@ bool
 HttpServer::isRunning() const
 {
     return m_running;
+}
+
+void
+HttpServer::addPollFd(const Fd fd)
+{
+    pollfd poll_fd{0, 0, 0};
+    poll_fd.fd = fd;
+    poll_fd.events = POLLIN | POLLOUT | POLLHUP;
+    m_poll_fds.push_back(poll_fd);
+}
+
+void
+HttpServer::removePollFd(const Fd fd)
+{
+    m_poll_fds.erase(
+            std::remove_if(
+                    std::begin(m_poll_fds),
+                    std::end(m_poll_fds),
+                    [&fd](const pollfd& poll_fd) { return poll_fd.fd == fd; }),
+            std::end(m_poll_fds));
 }
 
 } // namespace http

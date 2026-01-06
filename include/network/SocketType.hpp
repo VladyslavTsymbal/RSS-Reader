@@ -2,7 +2,7 @@
 
 #include <sys/socket.h> // for SOCK_DGRAM, SOCK_STREAM
 
-namespace utils::network {
+namespace network {
 
 enum class SocketType : int
 {
@@ -10,4 +10,4 @@ enum class SocketType : int
     UDP = SOCK_DGRAM
 };
 
-} // namespace utils::network
+} // namespace network

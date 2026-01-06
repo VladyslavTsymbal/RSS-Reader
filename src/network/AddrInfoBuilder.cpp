@@ -1,8 +1,8 @@
-#include "utils/network/AddrInfoBuilder.hpp"
+#include "network/AddrInfoBuilder.hpp"
 
 #include <cstring>
 
-namespace utils::network {
+namespace network {
 
 AddrInfoBuilder::AddrInfoBuilder()
 {
@@ -36,4 +36,4 @@ AddrInfoBuilder::build()
     return m_addrinfo;
 }
 
-} // namespace utils::network
+} // namespace network
