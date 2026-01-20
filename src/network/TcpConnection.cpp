@@ -36,6 +36,18 @@ TcpConnection::receiveBytes(const size_t buffer_size) const
     return m_network_utils->receiveBytes(m_socket, buffer_size);
 }
 
+std::expected<int, StatusCode>
+TcpConnection::trySendBytes(BytesView bytes) const
+{
+    return m_network_utils->trySendBytes(m_socket, bytes);
+}
+
+std::expected<Bytes, StatusCode>
+TcpConnection::tryReceiveBytes(const size_t buffer_size) const
+{
+    return m_network_utils->tryReceiveBytes(m_socket, buffer_size);
+}
+
 bool
 TcpConnection::isClosed() const
 {

@@ -4,6 +4,7 @@
 #include "http/HttpConnectionState.hpp"
 
 #include "network/AddrInfoBuilder.hpp"
+#include "network/NetworkHelpers.hpp"
 #include "network/StatusCode.hpp"
 #include "network/INetworkUtils.hpp"
 #include "network/Types.hpp"
@@ -16,7 +17,6 @@
 #include <cerrno>
 #include <netdb.h>
 #include <sys/types.h>
-#include <fcntl.h>
 
 namespace {
 
@@ -163,13 +163,7 @@ HttpServer::createServerSocket(const AddrInfoPtr& addrinfo)
         return std::nullopt;
     }
 
-    const int flags = fcntl(socket->fd(), F_GETFL, 0);
-    if (flags == -1)
-    {
-        return std::nullopt;
-    }
-
-    if (fcntl(socket->fd(), F_SETFL, flags | O_NONBLOCK) == -1)
+    if (!network::makeSocketNonBlocking(*socket))
     {
         return std::nullopt;
     }

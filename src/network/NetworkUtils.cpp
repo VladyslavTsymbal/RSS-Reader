@@ -1,5 +1,6 @@
 #include "network/NetworkUtils.hpp"
 #include "network/INetworkUtils.hpp"
+#include "network/NetworkHelpers.hpp"
 #include "network/StatusCode.hpp"
 #include "network/TcpSocket.hpp"
 #include "network/Types.hpp"
@@ -87,9 +88,51 @@ NetworkUtils::getAddrInfo(std::string_view ip, Port port, const addrinfo* hints)
 }
 
 std::expected<int, StatusCode>
-NetworkUtils::sendBytes(const int socket_fd, BytesView bytes) const
+NetworkUtils::sendBytes(const TcpSocket& socket, BytesView bytes) const
 {
-    const int bytes_sent = ::send(socket_fd, bytes.data(), bytes.size(), MSG_DONTWAIT);
+    const auto non_blocking = isSocketNonBlocking(socket);
+    if (!non_blocking || (*non_blocking == true))
+    {
+        return std::unexpected(StatusCode::FAIL);
+    }
+
+    const int bytes_sent = ::send(socket.fd(), bytes.data(), bytes.size(), 0);
+    if (bytes_sent == -1)
+    {
+        return std::unexpected(StatusCode::WRITE_ERROR);
+    }
+
+    return bytes_sent;
+}
+
+std::expected<Bytes, StatusCode>
+NetworkUtils::receiveBytes(const TcpSocket& socket, const size_t buffer_size) const
+{
+    const auto non_blocking = isSocketNonBlocking(socket);
+    if (!non_blocking || (*non_blocking == true))
+    {
+        return std::unexpected(StatusCode::FAIL);
+    }
+
+    Bytes buffer(buffer_size);
+    ssize_t received_bytes = ::recv(socket.fd(), buffer.data(), buffer.size(), 0);
+    if (received_bytes == 0)
+    {
+        return std::unexpected(StatusCode::CLOSED_BY_PEER);
+    }
+    else if (received_bytes == -1)
+    {
+        return std::unexpected(StatusCode::READ_ERROR);
+    }
+
+    buffer.resize(received_bytes);
+    return buffer;
+}
+
+std::expected<int, StatusCode>
+NetworkUtils::trySendBytes(const TcpSocket& socket, BytesView bytes) const
+{
+    const int bytes_sent = ::send(socket.fd(), bytes.data(), bytes.size(), MSG_DONTWAIT);
     if (bytes_sent == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -103,18 +146,12 @@ NetworkUtils::sendBytes(const int socket_fd, BytesView bytes) const
     return bytes_sent;
 }
 
-std::expected<int, StatusCode>
-NetworkUtils::sendBytes(const TcpSocket& socket, BytesView bytes) const
-{
-    return sendBytes(socket.fd(), bytes);
-}
-
 std::expected<Bytes, StatusCode>
-NetworkUtils::receiveBytes(const int socket_fd, const size_t buffer_size) const
+NetworkUtils::tryReceiveBytes(const TcpSocket& socket, const size_t buffer_size) const
 {
     Bytes buffer(buffer_size);
 
-    ssize_t received_bytes = ::recv(socket_fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+    ssize_t received_bytes = ::recv(socket.fd(), buffer.data(), buffer.size(), MSG_DONTWAIT);
     if (received_bytes == 0)
     {
         return std::unexpected(StatusCode::CLOSED_BY_PEER);
@@ -131,12 +168,6 @@ NetworkUtils::receiveBytes(const int socket_fd, const size_t buffer_size) const
 
     buffer.resize(received_bytes);
     return buffer;
-}
-
-std::expected<Bytes, StatusCode>
-NetworkUtils::receiveBytes(const TcpSocket& socket, const size_t buffer_size) const
-{
-    return receiveBytes(socket.fd(), buffer_size);
 }
 
 } // namespace network

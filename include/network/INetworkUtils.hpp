@@ -29,17 +29,21 @@ public:
     virtual std::expected<AddrInfoPtr, int>
     getAddrInfo(std::string_view ip, Port port, const addrinfo* info) = 0;
 
+    // Blocking send
     virtual std::expected<int, StatusCode>
     sendBytes(const TcpSocket& socket, BytesView bytes) const = 0;
 
+    // Blocking recv
     virtual std::expected<Bytes, StatusCode>
     receiveBytes(const TcpSocket& socket, const size_t buffer_size) const = 0;
 
+    // Non-Blocking send
     virtual std::expected<int, StatusCode>
-    sendBytes(const int socket_fd, BytesView bytes) const = 0;
+    trySendBytes(const TcpSocket& socket, BytesView bytes) const = 0;
 
+    // Non-Blocking recv
     virtual std::expected<Bytes, StatusCode>
-    receiveBytes(const int socket_fd, const size_t buffer_size) const = 0;
+    tryReceiveBytes(const TcpSocket& socket, const size_t buffer_size) const = 0;
 };
 
 } // namespace network

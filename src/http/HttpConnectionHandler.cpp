@@ -98,7 +98,7 @@ HttpConnectionHandler::readAvailable()
 
     while (true)
     {
-        const auto request_data = m_connection->receiveBytes(BUFFER_SIZE);
+        const auto request_data = m_connection->tryReceiveBytes(BUFFER_SIZE);
         if (!request_data)
         {
             status = request_data.error();
@@ -151,7 +151,7 @@ HttpConnectionHandler::writeAvailable()
         const auto bytes_to_sent = std::min(bytes_left, BUFFER_SIZE);
 
         BytesView bytes(std::begin(m_buffers->out) + m_buffers->out_offset, bytes_to_sent);
-        const auto bytes_sent = m_connection->sendBytes(bytes);
+        const auto bytes_sent = m_connection->trySendBytes(bytes);
         if (!bytes_sent)
         {
             status = bytes_sent.error();

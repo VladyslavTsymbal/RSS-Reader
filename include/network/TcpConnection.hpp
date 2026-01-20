@@ -14,11 +14,21 @@ public:
     TcpConnection() = delete;
     TcpConnection(network::TcpSocket socket, std::shared_ptr<network::INetworkUtils> network_utils);
 
+    // Blocking send
     std::expected<int, network::StatusCode>
     sendBytes(network::BytesView bytes) const override;
 
+    // Blocking recv
     std::expected<network::Bytes, network::StatusCode>
     receiveBytes(const size_t buffer_size) const override;
+
+    // Non-Blocking send
+    std::expected<int, network::StatusCode>
+    trySendBytes(network::BytesView bytes) const;
+
+    // Non-Blocking recv
+    std::expected<network::Bytes, network::StatusCode>
+    tryReceiveBytes(const size_t buffer_size) const;
 
     bool
     isClosed() const override;

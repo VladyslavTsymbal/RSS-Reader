@@ -34,10 +34,10 @@ public:
     receiveBytes(const TcpSocket& socket, const size_t buffer_size) const override;
 
     std::expected<int, StatusCode>
-    sendBytes(const int socket_fd, BytesView bytes) const override;
+    trySendBytes(const TcpSocket& socket, BytesView bytes) const override;
 
     std::expected<Bytes, StatusCode>
-    receiveBytes(const int socket_fd, const size_t buffer_size) const override;
+    tryReceiveBytes(const TcpSocket& socket, const size_t buffer_size) const override;
 
 protected:
     std::shared_ptr<ISysCallsWrapper> m_syscalls_wrapper = std::make_shared<SysCallsWrapper>();
