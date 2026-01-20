@@ -9,9 +9,9 @@
 #include <sys/poll.h>
 #include <unordered_map>
 #include <expected>
+#include <optional>
 
 namespace network {
-class TcpSocket;
 class INetworkUtils;
 } // namespace network
 
@@ -48,6 +48,10 @@ public:
 private:
     using Fd = int;
     using FdVec = std::vector<Fd>;
+
+    // Creates non-blocking socket for server
+    std::optional<network::TcpSocket>
+    createServerSocket(const network::AddrInfoPtr& addrinfo);
 
     std::expected<int, network::StatusCode>
     acceptConnection();

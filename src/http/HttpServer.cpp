@@ -30,6 +30,7 @@ using network::AddrInfoBuilder;
 using network::AddrInfoPtr;
 using network::ProtocolFamily;
 using network::SocketType;
+using network::TcpSocket;
 
 } // namespace
 
@@ -59,6 +60,11 @@ HttpServer::~HttpServer()
 bool
 HttpServer::init()
 {
+    if (m_initialized)
+    {
+        return m_initialized;
+    }
+
     const auto hints = AddrInfoBuilder()
                                .setProtocolFamily(ProtocolFamily::UNSPECIFIED)
                                .setSockType(SocketType::TCP)
@@ -69,59 +75,43 @@ HttpServer::init()
     if (!addrinfo)
     {
         LOG_ERROR(LOG_TAG, "getAddrInfo failed: {}", ::gai_strerror(addrinfo.error()));
-        return false;
+        return m_initialized;
     }
 
-    auto socket = m_network_utils->createTcpSocket(*addrinfo);
+    auto socket = createServerSocket(*addrinfo);
     if (!socket)
     {
-        LOG_ERROR(LOG_TAG, "createTcpSocket failed: {}", ::strerror(errno));
-        return false;
+        LOG_ERROR(LOG_TAG, "Failed to create server socket");
+        return m_initialized;
     }
-    m_server_socket = std::move(*socket);
 
     LOG_INFO(LOG_TAG, "Socket binding...");
     const int bind_status =
-            ::bind(m_server_socket.fd(), addrinfo->get()->ai_addr, addrinfo->get()->ai_addrlen);
+            ::bind(socket->fd(), addrinfo->get()->ai_addr, addrinfo->get()->ai_addrlen);
     if (bind_status)
     {
         LOG_ERROR(LOG_TAG, "Socket binding failed: {}", ::strerror(errno));
-        return false;
-    }
-
-    int flags = fcntl(m_server_socket.fd(), F_GETFL, 0);
-    if (flags == -1)
-    {
-        // TODO: handle error
-    }
-
-    if (fcntl(m_server_socket.fd(), F_SETFL, flags | O_NONBLOCK) == -1)
-    {
-        // TODO: handle error
+        return m_initialized;
     }
 
     LOG_INFO(LOG_TAG, "Call `listen` for the socket.");
-    const int listen_status = ::listen(m_server_socket.fd(), SOMAXCONN);
+    const int listen_status = ::listen(socket->fd(), SOMAXCONN);
     if (listen_status)
     {
         LOG_ERROR(LOG_TAG, "`Listen` failed: {}", ::strerror(errno));
-        return false;
+        return m_initialized;
     }
 
-    // Get rid of annoying 'Address already in use'
-    int yes = 1;
-    const int sockopt_status =
-            ::setsockopt(m_server_socket.fd(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-    if (sockopt_status)
+    m_server_socket = std::move(*socket);
+    if (!m_server_socket.isValid())
     {
-        LOG_ERROR(LOG_TAG, "`setsockopt` failed: {}", ::strerror(errno));
-        return false;
+        LOG_ERROR(LOG_TAG, "Failed to initialize server socket. Socket is not valid");
+        return m_initialized;
     }
 
     addPollFd(m_server_socket.fd());
     m_initialized = true;
-
-    return true;
+    return m_initialized;
 }
 
 void
@@ -141,6 +131,7 @@ HttpServer::run()
         {
             LOG_ERROR(LOG_TAG, "Stopping. Poll ended with an error: {}", ::strerror(errno));
             m_running = false;
+            break;
         }
         else if (poll_events > 0)
         {
@@ -149,6 +140,41 @@ HttpServer::run()
 
         processTasks();
     }
+}
+
+bool
+HttpServer::isInitialized() const
+{
+    return m_initialized;
+}
+
+bool
+HttpServer::isRunning() const
+{
+    return m_running;
+}
+
+std::optional<TcpSocket>
+HttpServer::createServerSocket(const AddrInfoPtr& addrinfo)
+{
+    auto socket = m_network_utils->createTcpSocket(addrinfo);
+    if (!socket || !socket->isValid())
+    {
+        return std::nullopt;
+    }
+
+    const int flags = fcntl(socket->fd(), F_GETFL, 0);
+    if (flags == -1)
+    {
+        return std::nullopt;
+    }
+
+    if (fcntl(socket->fd(), F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        return std::nullopt;
+    }
+
+    return socket;
 }
 
 void
@@ -352,18 +378,6 @@ HttpServer::acceptConnection()
     auto handler = std::make_shared<HttpConnectionHandler>(std::move(tcp_connection));
     m_connections.emplace(std::make_pair(socket_fd, std::move(handler)));
     return socket_fd;
-}
-
-bool
-HttpServer::isInitialized() const
-{
-    return m_initialized;
-}
-
-bool
-HttpServer::isRunning() const
-{
-    return m_running;
 }
 
 void
