@@ -15,6 +15,7 @@ public:
     HttpClient() = default;
     HttpClient(std::shared_ptr<HttpConnectionFactory> factory);
 
+    // This is one shot request. Synchronous send, synchronous read and close of connection.
     std::optional<HttpResponse>
     sendRequest(const HttpRequest& request);
 
