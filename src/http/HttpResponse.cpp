@@ -1,58 +1,77 @@
 #include "http/HttpResponse.hpp"
 #include "http/HttpHelpers.hpp"
 #include "http/Constants.hpp"
+#include "network/NetworkHelpers.hpp"
+#include "network/Types.hpp"
 
 #include <optional>
 #include <charconv>
 
+namespace {
+
+using network::Bytes;
+
+} // namespace
+
 namespace http {
 
-HttpResponse::HttpResponse(std::string response)
+HttpResponse::HttpResponse(Bytes bytes)
 {
-    if (!response.empty())
+    if (bytes.empty())
     {
-        parseResponse(std::move(response));
+        m_is_valid = false;
+        return;
     }
+
+    m_data = std::move(bytes);
+    parseResponse();
 }
 
 void
-HttpResponse::parseResponse(std::string response)
+HttpResponse::parseResponse()
 {
-    const auto end_of_headers_pos = findEndOfHeaders(response);
-    if (end_of_headers_pos != std::string_view::npos)
+    const auto end_of_headers_pos = findEndOfHeaders(network::toStringView(m_data));
+    if (end_of_headers_pos == std::string_view::npos)
     {
-        // Append 4 symbols (end_of_header) \r\n\r\n at the end of the string_view
-        // in order to be able successfully find the very last header.
-        // Without this, string view ends just before the \r\n\r\n sequence.
-        std::string_view headers_sv(response.data(), end_of_headers_pos + 4);
-        // Parse status line
-        m_status_line = parseStatusLine(headers_sv);
-
-        // If status line is present, it should be skipped.
-        if (m_status_line)
-        {
-            const auto first_crlf_pos = headers_sv.find(CRLF);
-            if (first_crlf_pos != std::string_view::npos)
-            {
-                // Remove at the beginning N chars + (\r\n).
-                headers_sv.remove_prefix(first_crlf_pos + CRLF.size());
-            }
-        }
-        // Save headers.
-        m_headers = parseHeaders(headers_sv);
+        m_is_valid = false;
+        return;
     }
 
-    // Save response body.
+    // Append 4 symbols (end_of_header) \r\n\r\n at the end of the string_view
+    // in order to be able successfully find the very last header.
+    // Without this, string view ends just before the \r\n\r\n sequence.
+    network::BytesView headers_bytes{m_data.data(), end_of_headers_pos + 4};
+    auto headers_sv = network::toStringView(headers_bytes);
+    // Parse status line
+    m_status_line = parseStatusLine(headers_sv);
+    if (!m_status_line)
+    {
+        m_is_valid = false;
+        return;
+    }
+
+    // Skip status line
+    const auto first_crlf_pos = headers_sv.find(CRLF);
+    if (first_crlf_pos != std::string_view::npos)
+    {
+        // Remove at the beginning N chars + (\r\n).
+        headers_sv.remove_prefix(first_crlf_pos + CRLF.size());
+    }
+
+    // Save headers.
+    m_headers = parseHeaders(headers_sv);
+    if (m_headers.empty())
+    {
+        m_is_valid = false;
+        return;
+    }
+
     auto content_length = getContentLengthValue();
     if (content_length && *content_length > 0)
     {
-        // Make string_view from the `end_of_headers_pos` + `\r\n\r\n`.
-        const size_t body_offset = end_of_headers_pos + 4;
-        if (body_offset + *content_length <= response.size())
-        {
-            std::string_view body_sv(response.data() + body_offset, *content_length);
-            m_body = std::string(body_sv);
-        }
+        // Save body offset.
+        const size_t body_offset = end_of_headers_pos + 4 + 1;
+        m_body_start = body_offset;
     }
 }
 
@@ -100,10 +119,16 @@ HttpResponse::parseStatusLine(std::string_view sv)
     return line;
 }
 
-std::optional<std::string_view>
+std::optional<network::BytesView>
 HttpResponse::getBody() const
 {
-    return m_body;
+    if (m_body_start)
+    {
+        network::BytesView body{std::begin(m_data) + *m_body_start, m_data.size() - *m_body_start};
+        return body;
+    }
+
+    return std::nullopt;
 }
 
 std::optional<std::string_view>
@@ -151,6 +176,12 @@ const HttpHeaders&
 HttpResponse::getHeaders() const
 {
     return m_headers;
+}
+
+bool
+HttpResponse::isValid() const
+{
+    return m_is_valid;
 }
 
 } // namespace http

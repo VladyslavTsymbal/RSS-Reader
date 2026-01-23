@@ -1,6 +1,7 @@
 #pragma once
 
 #include "http/Types.hpp"
+#include "network/Types.hpp"
 
 #include <string>
 #include <optional>
@@ -17,9 +18,9 @@ public:
         int m_status_code{};
     };
 
-    HttpResponse(std::string response);
+    HttpResponse(network::Bytes bytes);
 
-    std::optional<std::string_view>
+    std::optional<network::BytesView>
     getBody() const;
 
     std::optional<std::string_view>
@@ -34,9 +35,12 @@ public:
     const HttpHeaders&
     getHeaders() const;
 
+    bool
+    isValid() const;
+
 private:
     void
-    parseResponse(std::string response);
+    parseResponse();
 
     std::optional<StatusLine>
     parseStatusLine(std::string_view data);
@@ -45,10 +49,11 @@ private:
     getContentLengthValue() const;
 
 private:
+    network::Bytes m_data;
     HttpHeaders m_headers;
     std::optional<StatusLine> m_status_line;
-    // TODO: Body could be binary data
-    std::optional<std::string> m_body;
+    std::optional<size_t> m_body_start;
+    bool m_is_valid{true};
 };
 
 } // namespace http
