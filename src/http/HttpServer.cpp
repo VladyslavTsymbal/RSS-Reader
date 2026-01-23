@@ -126,6 +126,8 @@ HttpServer::run()
     m_running = true;
     while (m_running)
     {
+        LOG_TRACE(LOG_TAG, "Polling...");
+
         const int poll_events = ::poll(m_poll_fds.data(), m_poll_fds.size(), POLL_TIMEOUT);
         if (poll_events < 0)
         {
@@ -174,8 +176,6 @@ HttpServer::createServerSocket(const AddrInfoPtr& addrinfo)
 void
 HttpServer::handlePollEvents()
 {
-    // LOG_DEBUG(LOG_TAG, "{} start", __FUNCTION__);
-
     const auto isReadEvent = [](const short revents) { return (revents & POLLIN); };
     const auto isWriteEvent = [](const short revents) { return (revents & POLLOUT); };
     const auto isCloseEvent = [](const short revents) { return (revents & POLLHUP); };
@@ -188,7 +188,7 @@ HttpServer::handlePollEvents()
 
     for (const auto& [fd, events, revents] : m_poll_fds)
     {
-        // LOG_TRACE(LOG_TAG, "Loop :D");
+        LOG_TRACE(LOG_TAG, "Loop :D");
 
         if (isAcceptEvent(m_server_socket.fd(), fd, revents))
         {
@@ -224,7 +224,7 @@ HttpServer::processTasks()
 {
     FdVec tasks_to_remove;
 
-    for (const Fd fd : m_pending_tasks_fd)
+    for (const Fd fd : m_write_queue)
     {
         const auto it = m_connections.find(fd);
         if (it != std::end(m_connections) && (it->second != nullptr))
@@ -250,7 +250,7 @@ HttpServer::processTasks()
 
     for (const Fd fd : tasks_to_remove)
     {
-        removeTask(fd);
+        removeWriteTask(fd);
     }
 }
 
@@ -308,7 +308,7 @@ HttpServer::handleWriteEvent(const Fd fd)
     // FIXME: Use observer pattern to notify about that write is possible
     // state = HttpConnectionState::WRITING;
 
-    scheduleTask(fd);
+    scheduleWriteTask(fd);
 }
 
 void
@@ -336,18 +336,18 @@ HttpServer::handleCloseEvent(const Fd fd, FdVec& fds_to_remove)
 }
 
 void
-HttpServer::scheduleTask(const Fd fd)
+HttpServer::scheduleWriteTask(const Fd fd)
 {
-    m_pending_tasks_fd.push_back(fd);
+    m_write_queue.push_back(fd);
 }
 
 void
-HttpServer::removeTask(const Fd fd)
+HttpServer::removeWriteTask(const Fd fd)
 {
     // TODO: Not optimal
-    m_pending_tasks_fd.erase(
-            std::remove(std::begin(m_pending_tasks_fd), std::end(m_pending_tasks_fd), fd),
-            std::end(m_pending_tasks_fd));
+    m_write_queue.erase(
+            std::remove(std::begin(m_write_queue), std::end(m_write_queue), fd),
+            std::end(m_write_queue));
 }
 
 std::expected<int, StatusCode>

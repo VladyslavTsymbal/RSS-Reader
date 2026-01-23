@@ -81,10 +81,10 @@ private:
     handleCloseEvent(const Fd fd, FdVec& fds_to_remove);
 
     void
-    scheduleTask(const Fd fd);
+    scheduleWriteTask(const Fd fd);
 
     void
-    removeTask(const Fd fd);
+    removeWriteTask(const Fd fd);
 
     void
     processTasks();
@@ -97,7 +97,7 @@ private:
     std::shared_ptr<http::HttpConnectionFactory> m_connection_factory;
     std::vector<pollfd> m_poll_fds;
     std::unordered_map<Fd, std::shared_ptr<HttpConnectionHandler>> m_connections;
-    FdVec m_pending_tasks_fd;
+    FdVec m_write_queue;
     bool m_initialized{false};
     bool m_running{false};
 };
