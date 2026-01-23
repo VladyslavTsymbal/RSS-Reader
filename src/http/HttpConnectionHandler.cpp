@@ -195,8 +195,7 @@ void
 HttpConnectionHandler::processData()
 {
     // FIXME: This is just for testing.
-    const auto request =
-            HttpRequestBuilder().buildFromString(network::bytesToString(m_buffers->in));
+    const auto request = HttpRequestBuilder().buildFromString(network::toStringView(m_buffers->in));
     if (!request)
     {
         return;

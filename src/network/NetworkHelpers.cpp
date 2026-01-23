@@ -16,10 +16,22 @@ toBytesView(const std::string& s)
     return std::as_bytes(std::span{s});
 }
 
-std::string
-bytesToString(BytesView bytes)
+BytesView
+toBytesView(std::string_view s)
 {
-    return std::string(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    return std::as_bytes(std::span{s});
+}
+
+std::string_view
+toStringView(BytesView bytes)
+{
+    return std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+}
+
+std::string_view
+toStringView(const Bytes& bytes)
+{
+    return std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 }
 
 bool

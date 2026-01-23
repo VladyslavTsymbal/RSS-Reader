@@ -13,8 +13,14 @@ copyBytes(Bytes& buffer, BytesView bytes);
 BytesView
 toBytesView(const std::string& s);
 
-std::string
-bytesToString(BytesView bytes);
+BytesView
+toBytesView(std::string_view sv);
+
+std::string_view
+toStringView(BytesView bytes);
+
+std::string_view
+toStringView(const Bytes& bytes);
 
 bool
 makeSocketNonBlocking(const TcpSocket& socket);
