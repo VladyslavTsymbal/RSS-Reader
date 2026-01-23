@@ -5,7 +5,7 @@
 namespace network {
 
 void
-copyBytes(BytesView bytes, Bytes& buffer)
+copyBytes(Bytes& buffer, BytesView bytes)
 {
     std::ranges::copy(std::begin(bytes), std::end(bytes), std::back_inserter(buffer));
 }

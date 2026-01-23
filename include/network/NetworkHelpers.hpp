@@ -8,7 +8,7 @@
 namespace network {
 
 void
-copyBytes(BytesView bytes, Bytes& buffer);
+copyBytes(Bytes& buffer, BytesView bytes);
 
 BytesView
 toBytesView(const std::string& s);

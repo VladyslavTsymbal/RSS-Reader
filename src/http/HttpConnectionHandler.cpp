@@ -105,7 +105,7 @@ HttpConnectionHandler::readAvailable()
             break;
         }
 
-        network::copyBytes(*request_data, m_buffers->in);
+        network::copyBytes(m_buffers->in, *request_data);
     }
 
     if (status == StatusCode::READ_ERROR)
@@ -204,7 +204,7 @@ HttpConnectionHandler::processData()
 
     const auto response = createResponse(*request);
     BytesView bytes = network::toBytesView(response);
-    network::copyBytes(bytes, m_buffers->out);
+    network::copyBytes(m_buffers->out, bytes);
     // TODO: Easy to forget to update the buffer out size
     m_buffers->out_size = response.size();
 
