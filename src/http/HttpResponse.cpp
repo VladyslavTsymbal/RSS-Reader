@@ -30,17 +30,14 @@ HttpResponse::HttpResponse(Bytes bytes)
 void
 HttpResponse::parseResponse()
 {
-    const auto end_of_headers_pos = findEndOfHeaders(network::toStringView(m_data));
+    const auto end_of_headers_pos = getEndOfHeaders(m_data);
     if (end_of_headers_pos == std::string_view::npos)
     {
         m_is_valid = false;
         return;
     }
 
-    // Append 4 symbols (end_of_header) \r\n\r\n at the end of the string_view
-    // in order to be able successfully find the very last header.
-    // Without this, string view ends just before the \r\n\r\n sequence.
-    network::BytesView headers_bytes{m_data.data(), end_of_headers_pos + 4};
+    network::BytesView headers_bytes{m_data.data(), end_of_headers_pos};
     auto headers_sv = network::toStringView(headers_bytes);
     // Parse status line
     m_status_line = parseStatusLine(headers_sv);
@@ -70,7 +67,7 @@ HttpResponse::parseResponse()
     if (content_length && *content_length > 0)
     {
         // Save body offset.
-        const size_t body_offset = end_of_headers_pos + 4 + 1;
+        const size_t body_offset = end_of_headers_pos + 1;
         m_body_start = body_offset;
     }
 }

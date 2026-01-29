@@ -1,15 +1,19 @@
 #pragma once
 
+#include "http/HttpConnectionState.hpp"
+#include "network/PollEvents.hpp"
 #include "network/Types.hpp"
 #include "network/TcpSocket.hpp"
 #include "network/StatusCode.hpp"
+#include "network/Types.hpp"
 
 #include <string>
 #include <memory>
-#include <sys/poll.h>
 #include <unordered_map>
 #include <expected>
 #include <optional>
+
+#include <sys/poll.h>
 
 namespace network {
 class INetworkUtils;
@@ -20,6 +24,7 @@ namespace http {
 class HttpConnectionFactory;
 class HttpConnectionHandler;
 class HttpRequest;
+struct PollEventDispatcher;
 
 class HttpServer
 {
@@ -46,9 +51,7 @@ public:
     isRunning() const;
 
 private:
-    using Fd = int;
-    using FdVec = std::vector<Fd>;
-
+    // Utilities functions
     // Creates non-blocking socket for server
     std::optional<network::TcpSocket>
     createServerSocket(const network::AddrInfoPtr& addrinfo);
@@ -57,47 +60,53 @@ private:
     acceptConnection();
 
     void
-    closeConnection(const Fd fd);
+    closeConnection(const network::Fd fd);
 
     void
-    addPollFd(const Fd fd);
+    addPollFd(const network::Fd fd);
 
     void
-    removePollFd(const Fd fd);
+    removePollFd(const network::Fd fd);
 
     void
-    handlePollEvents();
+    updatePollFdEvents(const network::Fd fd, const HandlerInterest interest);
 
-    void
-    handleAcceptEvent(FdVec& fds_to_add);
+    HttpConnectionHandler*
+    findConnectionHandler(const network::Fd fd) const;
 
-    void
-    handleReadEvent(const Fd fd, FdVec& fds_to_remove);
-
-    void
-    handleWriteEvent(const Fd fd);
-
-    void
-    handleCloseEvent(const Fd fd, FdVec& fds_to_remove);
-
-    void
-    scheduleWriteTask(const Fd fd);
-
-    void
-    removeWriteTask(const Fd fd);
-
-    void
-    processTasks();
+    std::optional<std::reference_wrapper<pollfd>>
+    findPollFd(const network::Fd fd);
 
 private:
+    // Event-related functions
+    std::vector<network::event::PollEvent>
+    handlePoll();
+
+    void
+    handleAcceptEvent(const network::event::Accept& event);
+
+    void
+    handleReadEvent(const network::event::Read& event);
+
+    void
+    handleWriteEvent(const network::event::Write& event);
+
+    void
+    handleCloseEvent(const network::event::Close& event);
+
+    void
+    dispatchEvents(std::vector<network::event::PollEvent> events);
+
+private:
+    friend struct PollEventDispatcher;
+
     const std::string m_ip;
-    network::Port m_port;
-    std::shared_ptr<network::INetworkUtils> m_network_utils;
+    const network::Port m_port;
+    const std::shared_ptr<network::INetworkUtils> m_network_utils;
+    const std::shared_ptr<http::HttpConnectionFactory> m_connection_factory;
     network::TcpSocket m_server_socket;
-    std::shared_ptr<http::HttpConnectionFactory> m_connection_factory;
     std::vector<pollfd> m_poll_fds;
-    std::unordered_map<Fd, std::shared_ptr<HttpConnectionHandler>> m_connections;
-    FdVec m_write_queue;
+    std::unordered_map<network::Fd, std::shared_ptr<HttpConnectionHandler>> m_connection_handlers;
     bool m_initialized{false};
     bool m_running{false};
 };

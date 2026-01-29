@@ -1,5 +1,7 @@
 #pragma once
 
+#include "network/Types.hpp"
+
 #include <netdb.h>
 
 namespace network {
@@ -13,10 +15,10 @@ public:
     socketSyscall(int domain, int type, int protocol) const = 0;
 
     virtual int
-    connectSyscall(int fd, const sockaddr* addr, socklen_t len) const = 0;
+    connectSyscall(Fd fd, const sockaddr* addr, socklen_t len) const = 0;
 
     virtual int
-    acceptSyscall(int fd, sockaddr* addr, socklen_t* len) const = 0;
+    acceptSyscall(Fd fd, sockaddr* addr, socklen_t* len) const = 0;
 
     virtual int
     getaddrinfoSyscall(

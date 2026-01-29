@@ -1,0 +1,7 @@
+@startuml
+participant "HttpServer" as s
+participant "HttpConnectionHandler" as h
+
+s -> h: handleEvent(event)
+
+@enduml

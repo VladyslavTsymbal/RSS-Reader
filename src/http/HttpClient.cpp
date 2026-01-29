@@ -24,20 +24,6 @@ using network::StatusCode;
 using network::BytesView;
 using network::Bytes;
 
-size_t
-checkHeadersReceived(BytesView buffer)
-{
-    auto end_of_headers_pos = http::findEndOfHeaders(
-            std::string_view(reinterpret_cast<const char*>(buffer.data()), buffer.size()));
-
-    if (end_of_headers_pos != std::string::npos)
-    {
-        end_of_headers_pos += http::END_OF_HEADERS_SEQ.size();
-    }
-
-    return end_of_headers_pos;
-}
-
 StatusCode
 sendRequestSync(
         const std::unique_ptr<network::TcpConnection>& connection, std::string_view request_string)
@@ -91,7 +77,7 @@ receiveResponseSync(const std::unique_ptr<network::TcpConnection>& connection)
         network::copyBytes(response_bytes, *request_data);
         if (!headers_recieved)
         {
-            const auto eofh_pos = checkHeadersReceived(response_bytes);
+            const auto eofh_pos = http::getEndOfHeaders(response_bytes);
             if (eofh_pos == std::string::npos)
             {
                 // Headers are not received yet, continue to receive data.

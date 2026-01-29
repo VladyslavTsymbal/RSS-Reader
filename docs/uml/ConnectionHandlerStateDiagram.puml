@@ -1,0 +1,24 @@
+@startuml
+
+hide empty description
+
+[*] --> ReadyToRead
+ReadyToRead --> Closing
+
+ReadyToRead -> Reading
+Reading --> Closing
+
+Reading -> Processing
+Processing --> Closing
+
+Processing -> Writing
+Writing --> Closing
+Writing --> WaitingForWrite
+Writing --> ReadyToRead
+
+WaitingForWrite --> Writing
+WaitingForWrite --> Closing
+
+Closing --> [*]
+
+@enduml

@@ -1,14 +1,28 @@
 #include "http/HttpHelpers.hpp"
 #include "http/Constants.hpp"
 
+#include "network/NetworkHelpers.hpp"
+
 #include <charconv>
 
 namespace http {
 
 std::size_t
-findEndOfHeaders(std::string_view response_sv)
+getEndOfHeaders(std::string_view response_sv)
 {
-    return response_sv.find(END_OF_HEADERS_SEQ);
+    const auto end_of_headers_pos = response_sv.find(END_OF_HEADERS_SEQ);
+    if (end_of_headers_pos != std::string::npos)
+    {
+        return end_of_headers_pos + END_OF_HEADERS_SEQ.size();
+    }
+
+    return end_of_headers_pos;
+}
+
+std::size_t
+getEndOfHeaders(network::BytesView buffer)
+{
+    return getEndOfHeaders(network::toStringView(buffer));
 }
 
 std::optional<size_t>

@@ -14,6 +14,11 @@ public:
     TcpConnection() = delete;
     TcpConnection(network::TcpSocket socket, std::shared_ptr<network::INetworkUtils> network_utils);
 
+    TcpConnection(TcpConnection&& other) noexcept;
+
+    TcpConnection&
+    operator=(TcpConnection&& other) noexcept;
+
     // Blocking send
     std::expected<int, network::StatusCode>
     sendBytes(network::BytesView bytes) const override;

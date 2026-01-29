@@ -24,6 +24,24 @@ TcpConnection::TcpConnection(TcpSocket socket, std::shared_ptr<INetworkUtils> ne
     assert(m_network_utils);
 }
 
+TcpConnection::TcpConnection(TcpConnection&& other) noexcept
+    : m_socket(std::move(other.m_socket))
+    , m_network_utils(std::move(other.m_network_utils))
+{
+}
+
+TcpConnection&
+TcpConnection::operator=(TcpConnection&& other) noexcept
+{
+    if (this != &other)
+    {
+        m_socket = std::move(other.m_socket);
+        m_network_utils = std::move(other.m_network_utils);
+    }
+
+    return *this;
+}
+
 std::expected<int, StatusCode>
 TcpConnection::sendBytes(BytesView bytes) const
 {
