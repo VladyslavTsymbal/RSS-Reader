@@ -2,7 +2,9 @@
 
 #include <spdlog/spdlog.h>
 
+#include <string>
 #include <string_view>
+#include <utility>
 
 namespace utils {
 
@@ -44,6 +46,10 @@ private:
     static std::string
     createFormatString(std::string_view tag, std::string_view fmt);
 
+    template <typename... Args>
+    static std::string
+    createMessage(std::string_view tag, std::string_view fmt, Args&&... args);
+
     LoggerImpl()
     {
         // Change log pattern
@@ -62,54 +68,73 @@ LoggerImpl::createFormatString(std::string_view tag, std::string_view fmt)
 }
 
 template <typename... Args>
+std::string
+LoggerImpl::createMessage(std::string_view tag, std::string_view fmt, Args&&... args)
+{
+    auto format_string = LoggerImpl::createFormatString(tag, fmt);
+    if constexpr (sizeof...(Args) == 0)
+    {
+        return format_string;
+    }
+    else
+    {
+        return spdlog::fmt_lib::format(
+                fmt::runtime(format_string), std::forward<Args>(args)...);
+    }
+}
+
+template <typename... Args>
 void
 LoggerImpl::logFatal(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    // Forced to use `fmt::runtime` as `createFormatString` can't be `constexpr` function.
-    // I didn't found a straight-forward way to display tag without something like
-    // `createFormatString`.
-    spdlog::critical(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::critical,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 template <typename... Args>
 void
 LoggerImpl::logError(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    spdlog::error(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::err,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 template <typename... Args>
 void
 LoggerImpl::logWarn(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    spdlog::warn(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::warn,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 template <typename... Args>
 void
 LoggerImpl::logInfo(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    spdlog::info(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::info,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 template <typename... Args>
 void
 LoggerImpl::logDebug(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    spdlog::debug(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::debug,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 template <typename... Args>
 void
 LoggerImpl::logTrace(std::string_view tag, std::string_view fmt, Args&&... args)
 {
-    spdlog::trace(
-            fmt::runtime(LoggerImpl::createFormatString(tag, fmt)), std::forward<Args>(args)...);
+    spdlog::default_logger_raw()->log(
+            spdlog::level::trace,
+            spdlog::string_view_t(LoggerImpl::createMessage(tag, fmt, std::forward<Args>(args)...)));
 }
 
 } // namespace utils
